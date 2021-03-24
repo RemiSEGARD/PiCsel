@@ -103,7 +103,7 @@ void calculate_coord(int x, int y, int* result)
 	result[1] = y;
 }
 
-int main(int argc, char** argv)
+int main_sdl(int argc, char** argv)
 {
 	// Creates a new SDL_Surface
 	SDL_Surface* image_surface = SDL_CreateRGBSurface(0, width, height, 32,
