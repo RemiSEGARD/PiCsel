@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include "ui.h"
 #include "drawing.h"
-//#include "sdl.c"
+#include "sdl_treatment.h"
 
-int main_ui()
+int main_ui(int x, int y)
 {
     // Initilizes GTK
     gtk_init(NULL, NULL);
@@ -35,6 +35,6 @@ int main_ui()
 
     // Runs the main loop
     gtk_main();
-    
+
     return 0;
 }

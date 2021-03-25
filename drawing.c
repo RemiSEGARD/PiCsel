@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include "ui.h"
+#include "sdl_treatment.h"
 
 /* Surface to store current scribbles */
 static cairo_surface_t *surface = NULL;
@@ -60,17 +61,20 @@ static void draw_brush (GtkWidget *widget, gdouble x, gdouble y)
     
     /* Paint to the surface, where we store our state */
     cr = cairo_create (surface);
-
-    cairo_rectangle (cr, x - 3, y - 3, 6, 6);
+    
+    GdkRectangle rect = calculate_coord(x, y, 
+            gtk_widget_get_allocated_width(widget));
+    cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
     cairo_fill (cr);
-
+    
     cairo_destroy (cr);
     
     /* Now invalidate the affected region of the drawing area.
      * Invalidated regions of a widget are redrawn by Gtk
      * In the current case, it redraws the area of the new rectangle
     */
-    gtk_widget_queue_draw_area (widget, x - 3, y - 3, 6, 6);
+    gtk_widget_queue_draw_area (widget, rect.x, rect.y, 
+            rect.width, rect.height);
 }
 
 /* Handle the different types of button pressed */
