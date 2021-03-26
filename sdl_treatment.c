@@ -2,8 +2,12 @@
 #include <SDL.h>
 #include <err.h>
 #include <gtk/gtk.h>
+#include "sdl_treatment.h"
+#include "img_layer.h"
+#include "img_frame.h"
 
-//const size_t PIXEL_SIZE = 50;
+struct SDL_data sdl_data;
+
 /*
     static inline
 Uint8* pixel_ref(SDL_Surface *surf, unsigned x, unsigned y)
@@ -83,22 +87,7 @@ static void update_surface(SDL_Surface* screen, SDL_Surface* image)
 
     SDL_UpdateRect(screen, 0, 0, image->w, image->h);
 }
-
-static void paint_sdl(SDL_Surface* image, unsigned x, unsigned y)
-{
-    for (size_t i = 0; i < PIXEL_SIZE; i++)
-    {
-        for (size_t j = 0; j < PIXEL_SIZE; j++)
-        {
-            // newPixel is set to the color black for now
-            Uint32 newPixel = SDL_MapRGB(image_surface->format, 0, 0, 0);
-            put_pixel(image, x + i, y + j, newPixel);
-        }
-    }
-}
 */
-int sx = 200;
-//int sy = 50;
 
 /* Compute the position to change the pixel in SDL from the coords of the click
  *  in the GtkDrawingArea
@@ -111,26 +100,24 @@ int sx = 200;
 GdkRectangle calculate_coord(int x, int y, int win_x)
 {
     GdkRectangle rect;
-    rect.x = x - x % (win_x / sx);
-    rect.y = y - y % (win_x / sx);
-    rect.width = win_x / sx;
-    rect.height = win_x / sx;
+    rect.x = x - x % (win_x / sdl_data.width);
+    rect.y = y - y % (win_x / sdl_data.width);
+    rect.width = win_x / sdl_data.width;
+    rect.height = win_x / sdl_data.width;
     return rect;
 }
-/*
-int main_sdl()
+
+void main_sdl(int width, int height)
 {
     // Creates a new SDL_Surface
     // SDL_Surface* image_surface = SDL_CreateRGBSurface(0, width, height, 32,
     //        0, 0, 0, 0);
-
-    // The rest is for display purpose
-    //SDL_Surface* screen_surface;
-    //init_sdl();
-
-    //screen_surface = display_image(image_surface);
-
-    //update_surface(screen_surface, image_surface);
-
-    //SDL_FreeSurface(image_surface);
-}*/
+    // TODO
+    sdl_data.width = 50;
+    sdl_data.height = 50;
+    sdl_data.frames = init_frame();
+    sdl_data.current = sdl_data.frames->next->layer->next->img;
+    sdl_data.nblayer = 1;
+    // import given file
+    // draw given file
+}

@@ -33,6 +33,7 @@ int main_ui(int x, int y)
     //      Drawing signals
     setup_drawing(drawing_area);
 
+    main_sdl(x, y);
     // Runs the main loop
     gtk_main();
 
