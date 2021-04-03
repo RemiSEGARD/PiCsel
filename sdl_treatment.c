@@ -14,7 +14,7 @@ Uint8* pixel_ref(SDL_Surface *surf, unsigned x, unsigned y)
 {
     // Function from epita prog S3 site
     int bpp = surf->format->BytesPerPixel;
-    return (Uint8*)surf->pixel + y * surf->pitch + x * bpp;
+    return (Uint8*)surf->pixels + y * surf->pitch + x * bpp;
 }
 
 Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y)
@@ -22,7 +22,7 @@ Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y)
     // Function from epita prog S3 site
     Uint8 *p = pixel_ref(surface, x, y);
 
-    swicth (surface->format->BytesPerPixel)
+    switch (surface->format->BytesPerPixel)
     {
         case 1:
             return *p;
@@ -48,7 +48,7 @@ static void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel
     // Function from epita prog S3 site
     Uint8 *p = pixel_ref(surface, x, y);
 
-    swicth(surface->format->BytesPerPixel)
+    switch(surface->format->BytesPerPixel)
     {
         case 1:
             *p = pixel;
@@ -69,7 +69,7 @@ static void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel
             {
                 p[0] = pixel & 0xff;
                 p[1] = (pixel >> 8) & 0xff;
-                p[2] = (pixel >> 16 & 0xff;)
+                p[2] = (pixel >> 16) & 0xff;
             }
             break;
 
