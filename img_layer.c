@@ -58,19 +58,77 @@ void add_layer(Layer *list, int w, int h)
 // Remove the i-th layer from the list
 void rm_layer(Layer *list, int index)
 {
-    // TODO
+    Layer *tmp = list;
+    while (index > 0 && tmp->next != NULL)
+    {
+        index--;
+        tmp = tmp->next;
+    }
+    if (index > 0)
+        errx(EXIT_FAILURE, "index out of bound");
+    Layer *stock = tmp;
+    while (tmp->next != NULL)
+    {
+        tmp->index--;
+        tmp = tmp->next;
+    }
+    Layer *prev = stock->prev;
+    prev->next = stock->next;
+    free(stock);
+    SDL_FreeSurface(stock->img);
 }
 
 // Swap the i-th layer with the j-th layer from the list
 void swap_layer(Layer *list, int i, int j)
 {
-    // TODO
+    Layer *layer_i = list;
+    Layer *layer_j = list;
+    while (i > 0 && layer_i->next != NULL)
+    {
+        i--;
+        layer_i = layer_i->next;
+    }
+    while (j > 0 && layer_j->next != NULL)
+    {
+        j--;
+        layer_j = layer_j->next;
+    }
+    // swap index
+    int index = layer_i->index;
+    layer_i->index = layer_j->index;
+    layer_j->index = index;
+    // swap prev
+    Layer *tmp = layer_i->prev;
+    layer_i->prev = layer_j->prev;
+    layer_j->prev = tmp;
+    tmp->next = layer_j
+    // swap next
+    tmp = layer_i->next;
+    layer_i->next = layer_j->next;
+    layer_j->next = tmp;
+    // renew the prev and next of layers next to layer_i and layer_j
+    tmp = layer_i->prev;
+    tmp->next = layer_i;
+    tmp = layer_i->next;
+    if (tmp != NULL)
+        tmp->prev = layer_i;
+    tmp = layer_j->prev;
+    tmp->next = layer_j;
+    tmp = layer_j->next;
+    if (tmp != NULL)
+        tmp->prev = layer_j;
 }
 
 
 // Returns the length of the layer list
 size_t length_layer(Layer *list)
 {
-    // TODO
+    size_t len = 0;
+    while(list->next != NULL)
+    {
+        len++;
+        list = list->next;
+    }
+    return len;
 }
 

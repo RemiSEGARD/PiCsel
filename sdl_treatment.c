@@ -134,8 +134,13 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
         rect.y = y - y % (win_x / sdl_data.width);
         rect.width = win_x / sdl_data.width;
         rect.height = win_x / sdl_data.width;
-        put_pixel(sdl_data.current->img, x * sdl_data.width / win_x,
-                y * sdl_data.width / win_x, pixel);
+        printf("x = %i\ny = %i\n",x*sdl_data.width/win_x, y*sdl_data.width/win_x);
+        int new_x = x * sdl_data.width / win_x;
+        int new_y = y * sdl_data.width / win_x;
+        if (new_x > 0 && new_x < sdl_data.width && new_y > 0 && new_y < sdl_data.height)
+        {
+            put_pixel(sdl_data.current->img, new_x, new_y, pixel);
+        }
     }
     else
     {
@@ -143,8 +148,13 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
         rect.y = y - y % (win_y / sdl_data.height);
         rect.width = win_y / sdl_data.height;
         rect.height = win_y / sdl_data.height;
-        put_pixel(sdl_data.current->img, x * sdl_data.height / win_y,
-                y * sdl_data.height / win_y, pixel);
+        printf("x = %i\ny = %i\n",x*sdl_data.height/win_y, y*sdl_data.height/win_y);
+        int new_x = x * sdl_data.height / win_y;
+        int new_y = y * sdl_data.height / win_y;
+        if (new_x > 0 && new_x < sdl_data.width && new_y > 0 && new_y < sdl_data.height)
+        {
+            put_pixel(sdl_data.current->img, new_x, new_y, pixel);
+        }
     }
     return rect;
 }
@@ -164,8 +174,11 @@ void main_sdl(int width, int height)
     sdl_data.curframe = 0;
     // import given file
     // draw given file
-    put_pixel(sdl_data.current->img, 0, 0, SDL_MapRGBA(sdl_data.current->img->format, 100, 100, 100, 255));
-    SDL_SaveBMP(sdl_data.current->img, "hi.bmp");
-    printf("%lu hi\n", sdl_data.current->img);
-    printf("hi\n");
+    //put_pixel(sdl_data.current->img, 0, 0, SDL_MapRGBA(sdl_data.current->img->format, 100, 100, 100, 255));
+    //printf("%lu hi\n", sdl_data.current->img);
+    //printf("hi\n");
+    // display
+    /*sdl_init();
+    SDL_Surface* screen_surface = display_image(sdl_data.current->img);
+    SDL_FreeSurface(screen_surface);*/
 }
