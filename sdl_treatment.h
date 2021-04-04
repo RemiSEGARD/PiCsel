@@ -11,8 +11,10 @@ typedef struct SDL_data
     int width;
     int height;
     Frame *frames;
-    SDL_Surface *current;
+    Layer *current;
     int nblayer;
+    int curframe;
+    int curlayer;
 } SDLdata;
 
 GdkRectangle calculate_coord(int x, int y, int win_x, int win_y);

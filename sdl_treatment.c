@@ -1,22 +1,43 @@
 #include <stdlib.h>
 #include <SDL.h>
 #include <err.h>
-#include <gtk/gtk.h>
+#include <gtk/gtk.h> 
 #include "sdl_treatment.h"
 #include "img_layer.h"
 #include "img_frame.h"
 
 struct SDL_data sdl_data;
 
+void select_layer(int frame, int layer)
+{
+    int iframe = frame;
+    int ilayer = layer;
+
+    Frame *frames = sdl_data.frames->next;
+    while (iframe > 0 && frames != NULL)
+    {
+        iframe--;
+        frames = frames->next;
+    }
+    Layer *nextlayer = frames->layer->next;
+    while (ilayer > 0 && nextlayer != NULL)
+    {
+        ilayer--;
+        nextlayer = nextlayer->next;
+    }
+    if (nextlayer != NULL)
+    {
+        sdl_data.current = nextlayer->img;
+        sdl_data.curlayer = layer;
+        sdl_data.curframe = frame;
+    }
+}
+
 static inline Uint8 *pixel_ref(SDL_Surface *surf, unsigned x, unsigned y)
 {
     // Function from epita prog S3 site
     int bpp = surf->format->BytesPerPixel;
-<<<<<<< HEAD
     return (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
-=======
-    return (Uint8*)surf->pixels + y * surf->pitch + x * bpp;
->>>>>>> 9bbd3539734c87eda1392bfbbaedb3db9f01b3f0
 }
 
 Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y)
@@ -50,36 +71,6 @@ static void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel
     // Function from epita prog S3 site
     Uint8 *p = pixel_ref(surface, x, y);
 
-<<<<<<< HEAD
-    switch (surface->format->BytesPerPixel)
-    {
-    case 1:
-        *p = pixel;
-        break;
-
-    case 2:
-        *(Uint16 *)p = pixel;
-        break;
-
-    case 3:
-        if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-        {
-            p[0] = (pixel >> 16) & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = pixel & 0xff;
-        }
-        else
-        {
-            p[0] = pixel & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = (pixel >> 16) & 0xff;
-        }
-        break;
-
-    case 4:
-        *(Uint32 *)p = pixel;
-        break;
-=======
     switch(surface->format->BytesPerPixel)
     {
         case 1:
@@ -108,7 +99,6 @@ static void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel
         case 4:
             *(Uint32 *)p = pixel;
             break;
->>>>>>> 9bbd3539734c87eda1392bfbbaedb3db9f01b3f0
     }
 }
 
@@ -123,6 +113,7 @@ static void update_surface(SDL_Surface* screen, SDL_Surface* image)
 }
 */
 
+
 /* Compute the position to change the pixel in SDL from the coords of the click
  *  in the GtkDrawingArea
  * x = position of the click
@@ -134,6 +125,8 @@ static void update_surface(SDL_Surface* screen, SDL_Surface* image)
 
 GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
 {
+    // gonna need to add pixel in arguments once palette is made
+    Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, 100, 100, 100, 255);
     GdkRectangle rect;
     if (win_x < win_y)
     {
@@ -141,6 +134,8 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
         rect.y = y - y % (win_x / sdl_data.width);
         rect.width = win_x / sdl_data.width;
         rect.height = win_x / sdl_data.width;
+        put_pixel(sdl_data.current->img, x * sdl_data.width / win_x,
+                y * sdl_data.width / win_x, pixel);
     }
     else
     {
@@ -148,6 +143,8 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
         rect.y = y - y % (win_y / sdl_data.height);
         rect.width = win_y / sdl_data.height;
         rect.height = win_y / sdl_data.height;
+        put_pixel(sdl_data.current->img, x * sdl_data.height / win_y,
+                y * sdl_data.height / win_y, pixel);
     }
     return rect;
 }
@@ -161,8 +158,14 @@ void main_sdl(int width, int height)
     sdl_data.width = width;
     sdl_data.height = height;
     sdl_data.frames = init_frame(width, height);
-    sdl_data.current = sdl_data.frames->next->layer->next->img;
+    sdl_data.current = sdl_data.frames->next->layer->next;
     sdl_data.nblayer = 1;
+    sdl_data.curlayer = 0;
+    sdl_data.curframe = 0;
     // import given file
     // draw given file
+    put_pixel(sdl_data.current->img, 0, 0, SDL_MapRGBA(sdl_data.current->img->format, 100, 100, 100, 255));
+    SDL_SaveBMP(sdl_data.current->img, "hi.bmp");
+    printf("%lu hi\n", sdl_data.current->img);
+    printf("hi\n");
 }
