@@ -6,7 +6,7 @@
 
 
 // Creates a sentinel for linked list layer
-Layer* init_layer()
+Layer* init_layer(int w, int h)
 {
     Layer *sentinel = malloc(sizeof(Layer));
     sentinel->prev = NULL;
@@ -14,13 +14,13 @@ Layer* init_layer()
     sentinel->index = -1;
     sentinel->img = NULL;
     
-    add_layer(sentinel);
+    add_layer(sentinel, w, h);
 
     return sentinel;
 }
 
 // Add an empty layer to the layer list
-void add_layer(Layer *list)
+void add_layer(Layer *list, int w, int h)
 {
     while(list->next != NULL)
     {
@@ -48,7 +48,7 @@ void add_layer(Layer *list)
     amask = 0xff000000;
 #endif
 
-    new->img = SDL_CreateRGBSurface(0, 10, 10, 32,
+    new->img = SDL_CreateRGBSurface(0, w, h, 32,
                                    rmask, gmask, bmask, amask);
     if (new->img == NULL) {
         errx(1, "SDL_CreateRGBSurface() failed");

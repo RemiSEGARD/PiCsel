@@ -14,10 +14,10 @@ typedef struct Layer
 } Layer;
 
 // Creates a sentinel for linked list layer
-Layer* init_layer();
+Layer* init_layer(int w, int h);
 
 // Add an empty layer to the layer list
-void add_layer(Layer *list);
+void add_layer(Layer *list, int w, int h);
 
 // Remove the i-th layer from the list
 void rm_layer(Layer *list, int index);

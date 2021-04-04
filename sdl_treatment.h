@@ -15,7 +15,7 @@ typedef struct SDL_data
     int nblayer;
 } SDLdata;
 
-GdkRectangle calculate_coord(int x, int y, int win_x);
+GdkRectangle calculate_coord(int x, int y, int win_x, int win_y);
 
 void main_sdl(int width, int height);
 

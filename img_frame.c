@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 // Creates the sentinel for the frame list
-Frame *init_frame()
+Frame *init_frame(int w, int h)
 {
     Frame *sentinel = malloc(sizeof(Frame));
     sentinel->prev = NULL;
@@ -15,13 +15,13 @@ Frame *init_frame()
     sentinel->duration = 0.0;
     sentinel->index = -1;
     sentinel->img = NULL;
-    add_frame(sentinel);
-    add_layer_to_all_frames(sentinel);
+    add_frame(sentinel, w , h, 1);
+    add_layer_to_all_frames(sentinel, w, h);
     return sentinel;
 }
 
-// Add a frame to the list
-void add_frame(Frame *list)
+// Add a frame to the list contenaing a given number of layer
+void add_frame(Frame *list, int w, int h, int nblayer)
 {
     while(list->next != NULL)
     {
@@ -31,7 +31,11 @@ void add_frame(Frame *list)
     list->next = new;
     new->next = NULL;
     new->prev = list;
-    new->layer = init_layer();
+    new->layer = init_layer(w, h);
+    for (int i = 0; i < nblayer - 1; i++)
+    {
+        add_layer(new->layer, w, h);
+    }
     new->index = list->index + 1;
     new->duration = 0.0;
     Uint32 rmask, gmask, bmask, amask;
@@ -50,7 +54,7 @@ void add_frame(Frame *list)
     amask = 0xff000000;
 #endif
 
-    new->img = SDL_CreateRGBSurface(0, 10, 10, 32,
+    new->img = SDL_CreateRGBSurface(0, w, h, 32,
                                    rmask, gmask, bmask, amask);
     if (new->img == NULL) {
         errx(1, "SDL_CreateRGBSurface() failed");
@@ -61,12 +65,12 @@ void add_frame(Frame *list)
 }
 
 // Add a layer to all frame
-void add_layer_to_all_frames(Frame *list)
+void add_layer_to_all_frames(Frame *list, int w, int h)
 {
     list = list->next;
     while(list != NULL)
     {
-        add_layer(list->layer);
+        add_layer(list->layer, w, h);
         list = list->next;
     }
 }

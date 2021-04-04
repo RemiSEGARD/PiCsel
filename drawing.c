@@ -63,7 +63,8 @@ static void draw_brush (GtkWidget *widget, gdouble x, gdouble y)
     cr = cairo_create (surface);
     
     GdkRectangle rect = calculate_coord(x, y, 
-            gtk_widget_get_allocated_width(widget));
+            gtk_widget_get_allocated_width(widget),
+            gtk_widget_get_allocated_height(widget));
     cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
     cairo_fill (cr);
     

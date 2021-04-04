@@ -16,13 +16,13 @@ typedef struct Frame
 } Frame;
 
 // Creates the sentinel for the frame list
-Frame *init_frame();
+Frame *init_frame(int w, int h);
 
 // Add a frame to the list
-void add_frame(Frame *list);
+void add_frame(Frame *list, int w, int h, int nblayer);
 
 // Add a layer to all frame
-void add_layer_to_all_frames(Frame *list);
+void add_layer_to_all_frames(Frame *list, int w, int h);
 
 // Remove the i-th frame of the linked list
 void rm_frame(Frame *list, int i);
