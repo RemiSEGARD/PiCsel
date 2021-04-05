@@ -17,6 +17,8 @@ typedef struct SDL_data
     int curlayer;
 } SDLdata;
 
+void export_current_frame(char *filename);
+
 GdkRectangle calculate_coord(int x, int y, int win_x, int win_y);
 
 void main_sdl(int width, int height);

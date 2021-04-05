@@ -4,6 +4,13 @@
 #include "drawing.h"
 #include "sdl_treatment.h"
 
+void on_export(GtkMenuItem *item, gpointer data)
+{
+    (void) item;
+    (void) data;
+    export_current_frame("export.bmp");
+}
+
 int main_ui(int x, int y)
 {
     // Initilizes GTK
@@ -25,11 +32,15 @@ int main_ui(int x, int y)
                 "window"));
     GtkDrawingArea* drawing_area = GTK_DRAWING_AREA(
             gtk_builder_get_object(builder, "draw_area"));
-
+    GtkMenuItem *export_button = GTK_MENU_ITEM(
+            gtk_builder_get_object(builder, "export-button"));
     // Connects signal handlers
     //      Closing signal
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-
+    
+    // MenuBar Signal
+    g_signal_connect(export_button, "activate", G_CALLBACK(on_export), NULL);
+    //gtk_menu_item_activate(export_button);
     //      Drawing signals
     setup_drawing(drawing_area);
 

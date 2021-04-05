@@ -16,7 +16,6 @@ Frame *init_frame(int w, int h)
     sentinel->index = -1;
     sentinel->img = NULL;
     add_frame(sentinel, w , h, 1);
-    add_layer_to_all_frames(sentinel, w, h);
     return sentinel;
 }
 
