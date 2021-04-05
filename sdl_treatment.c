@@ -3,11 +3,15 @@
 #include <SDL_image.h>
 #include <err.h>
 #include <gtk/gtk.h> 
+#include "display_sdl.h"
 #include "sdl_treatment.h"
 #include "img_layer.h"
 #include "img_frame.h"
 
 struct SDL_data sdl_data;
+
+//SDL_Surface *screen_surface;
+
 
 Frame* get_frame(int i)
 {
@@ -79,7 +83,7 @@ Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y)
     return 0;
 }
 
-static void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel)
+void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel)
 {
     // Function from epita prog S3 site
     Uint8 *p = pixel_ref(surface, x, y);
@@ -115,7 +119,7 @@ static void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel
     }
 }
 
-void compress_frame(int i)
+SDL_Surface *compress_frame(int i)
 {
     Frame *f = get_frame(i);
     Layer *l = f->layer->next;
@@ -131,6 +135,7 @@ void compress_frame(int i)
         }
         l = l->next;
     }
+    return f->img;
 }
 
 void import_img(char *file)
@@ -140,8 +145,8 @@ void import_img(char *file)
 
 void export_current_frame(char *filename)
 {
-    compress_frame(sdl_data.curframe);
-    SDL_SaveBMP(get_frame(sdl_data.curframe)->img, filename);
+    SDL_Surface *c = compress_frame(sdl_data.curframe);
+    SDL_SaveBMP(c, filename);
     //SDL_SaveBMP(sdl_data.current->img, filename);
 }
 
@@ -154,6 +159,7 @@ void export_current_frame(char *filename)
  * Returns a GdkRectangle storing the position and size of the pixel to draw
  *  on the window
  */
+
 
 GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
 {
@@ -215,3 +221,26 @@ void main_sdl(int width, int height)
     SDL_Surface* screen_surface = display_image(sdl_data.current->img);
     SDL_FreeSurface(screen_surface);*/
 }
+
+SDL_Surface *main_sdl_import(char *filename)
+{
+    SDL_Surface *import = IMG_Load(filename);
+
+    sdl_data.width = import->w;
+    sdl_data.height = import->h;
+    sdl_data.frames = init_frame(import->w, import->h);
+    sdl_data.current = sdl_data.frames->next->layer->next;
+    SDL_Surface *betterimport = SDL_ConvertSurface(import, 
+            sdl_data.current->img->format, 0);
+    SDL_FreeSurface(sdl_data.current->img);
+    SDL_FreeSurface(import);
+    sdl_data.current->img = betterimport;
+    sdl_data.nblayer = 1;
+    sdl_data.curlayer = 0;
+    sdl_data.curframe = 0;
+    
+    
+    // SDL_FreeSurface(screen_surface);
+    return betterimport;
+}
+

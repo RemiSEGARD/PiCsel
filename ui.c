@@ -11,7 +11,7 @@ void on_export(GtkMenuItem *item, gpointer data)
     export_current_frame("export.bmp");
 }
 
-int main_ui(int x, int y)
+int main_ui(int x, int y, char *filename)
 {
     // Initilizes GTK
     gtk_init(NULL, NULL);
@@ -43,10 +43,22 @@ int main_ui(int x, int y)
     //gtk_menu_item_activate(export_button);
     //      Drawing signals
     setup_drawing(drawing_area);
-
-    main_sdl(x, y);
+    
+    if (x != 0)
+        main_sdl(x, y);
+    else
+    {
+        // need to create a thread i think
+        // it looks like gtk is not ready yet to receive drawing stuff
+        // since gtk_main isnt started
+        // BUT we also cant do anything after gtk_main()....
+        SDL_Surface *import = main_sdl_import(filename);
+        redraw_surface(drawing_area, import);
+    }
+    
     // Runs the main loop
     gtk_main();
+    
 
     return 0;
 }

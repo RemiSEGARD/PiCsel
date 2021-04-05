@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include "ui.h"
+#include "SDL.h"
 #include "sdl_treatment.h"
 
 /* Surface to store current scribbles */
@@ -78,6 +79,48 @@ static void draw_brush (GtkWidget *widget, gdouble x, gdouble y)
             rect.width, rect.height);
 }
 
+
+/* Draw a rectangle on the surface at the given position of an image */
+static void draw_pixel (GtkWidget *widget, int x, int y, SDL_Surface *s)
+{
+    (void) widget;
+    cairo_t *cr;
+    
+    /* Paint to the surface, where we store our state */
+    cr = cairo_create (surface);
+    
+    GdkRectangle rect; 
+    int w = gtk_widget_get_allocated_width(widget);
+    int h = gtk_widget_get_allocated_height(widget);
+    int pixel_size;
+    if (w < h)
+        pixel_size = w / s->w;
+    else
+        pixel_size = h / s->h;
+    rect.x = x * pixel_size;
+    rect.y = y * pixel_size;
+    rect.width = pixel_size;
+    rect.height = pixel_size;
+    
+
+    cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
+    
+    Uint8 r, g, b;
+    SDL_GetRGB(get_pixel(s, x, y), s->format, &r, &g, &b);
+    cairo_set_source_rgb(cr,
+            (double) r / 255, (double) g / 255, (double) b / 255);
+    cairo_fill (cr);
+    cairo_destroy (cr);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    
+    /* Now invalidate the affected region of the drawing area.
+     * Invalidated regions of a widget are redrawn by Gtk
+     * In the current case, it redraws the area of the new rectangle
+    */
+    gtk_widget_queue_draw_area (widget, rect.x, rect.y, 
+            rect.width, rect.height);
+}
+
 /* Handle the different types of button pressed */
 static gboolean button_press_event_cb (GtkWidget *widget,
         GdkEventButton *event, gpointer data)
@@ -111,6 +154,17 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
         draw_brush (widget, event->x, event->y);
 
     return TRUE;
+}
+
+void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surface)
+{
+    for (int i = 0; i < surface->w; i++)
+    {
+        for (int j = 0; j < surface->h; j++)
+        {
+            draw_pixel((GtkWidget *)drawing_area, i , j, surface);
+        }
+    }
 }
 
 // Setups the events for the drawing area
