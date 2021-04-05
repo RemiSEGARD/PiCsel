@@ -21,12 +21,14 @@ Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y);
 
 void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel);
 
+SDL_Surface *compress_frame(int i);
+
 void export_current_frame(char *filename);
 
 GdkRectangle calculate_coord(int x, int y, int win_x, int win_y);
 
 void main_sdl(int width, int height);
 
-SDL_Surface *main_sdl_import(char *filename);
+void main_sdl_import(char *filename);
 
 #endif

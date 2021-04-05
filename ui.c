@@ -40,6 +40,23 @@ void on_new_layer()
 	//TODO
 }
 
+int w;
+int h;
+
+void on_drawingarea_draw(GtkWidget *widget, gpointer data)
+{
+    (void) data;
+    int new_w = gtk_widget_get_allocated_width(widget);
+    int new_h = gtk_widget_get_allocated_height(widget);
+    if (w != new_w || h != new_h)
+    {
+        w = gtk_widget_get_allocated_width(widget);
+        h = gtk_widget_get_allocated_height(widget);
+        SDL_Surface *surface = compress_frame(-1);
+        redraw_surface((GtkDrawingArea *)widget, surface);
+    }
+}
+
 void on_export(GtkMenuItem *item, gpointer data)
 {
     (void) item;
@@ -105,9 +122,13 @@ int main_ui(int x, int y, char *filename)
         // it looks like gtk is not ready yet to receive drawing stuff
         // since gtk_main isnt started
         // BUT we also cant do anything after gtk_main()....
-        SDL_Surface *import = main_sdl_import(filename);
-        redraw_surface(drawing_area, import);
+        main_sdl_import(filename);
     }
+
+    w = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
+    h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
+    
+    g_signal_connect(drawing_area, "draw", G_CALLBACK(on_drawingarea_draw), NULL);
     
     // Runs the main loop
     gtk_main();

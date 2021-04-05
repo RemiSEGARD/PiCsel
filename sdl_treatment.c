@@ -121,6 +121,8 @@ void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel)
 
 SDL_Surface *compress_frame(int i)
 {
+    if (i == -1)
+        i = sdl_data.curframe;
     Frame *f = get_frame(i);
     Layer *l = f->layer->next;
     while (l != NULL)
@@ -222,7 +224,7 @@ void main_sdl(int width, int height)
     SDL_FreeSurface(screen_surface);*/
 }
 
-SDL_Surface *main_sdl_import(char *filename)
+void main_sdl_import(char *filename)
 {
     SDL_Surface *import = IMG_Load(filename);
 
@@ -241,6 +243,5 @@ SDL_Surface *main_sdl_import(char *filename)
     
     
     // SDL_FreeSurface(screen_surface);
-    return betterimport;
 }
 
