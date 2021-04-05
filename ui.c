@@ -4,6 +4,42 @@
 #include "drawing.h"
 #include "sdl_treatment.h"
 
+void on_quit()
+{
+	//free_all call
+	gtk_main_quit();
+}
+
+void on_prev_frame()
+{
+	//TODO
+}
+
+void on_next_frame()
+{
+	//TODO
+}
+
+void on_new_frame()
+{
+	//TODO
+}
+
+void on_prev_layer()
+{
+	//TODO
+}
+
+void on_next_layer()
+{
+	//TODO
+}
+
+void on_new_layer()
+{
+	//TODO
+}
+
 void on_export(GtkMenuItem *item, gpointer data)
 {
     (void) item;
@@ -34,6 +70,15 @@ int main_ui(int x, int y, char *filename)
             gtk_builder_get_object(builder, "draw_area"));
     GtkMenuItem *export_button = GTK_MENU_ITEM(
             gtk_builder_get_object(builder, "export-button"));
+
+    GtkButton* prev_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "prev_frame"));
+    GtkButton* next_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_frame"));
+    GtkButton* new_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_frame"));
+    GtkButton* prev_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "prev_layer"));
+    GtkButton* next_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_layer"));
+    GtkButton* new_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_layer"));
+
+
     // Connects signal handlers
     //      Closing signal
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -41,6 +86,14 @@ int main_ui(int x, int y, char *filename)
     // MenuBar Signal
     g_signal_connect(export_button, "activate", G_CALLBACK(on_export), NULL);
     //gtk_menu_item_activate(export_button);
+    
+    g_signal_connect(prev_frame_button, "clicked", G_CALLBACK(on_prev_frame), NULL);
+    g_signal_connect(next_frame_button, "clicked", G_CALLBACK(on_next_frame), NULL);
+    g_signal_connect(new_frame_button, "clicked", G_CALLBACK(on_new_frame), NULL);
+    g_signal_connect(prev_layer_button, "clicked", G_CALLBACK(on_prev_layer), NULL);
+    g_signal_connect(next_layer_button, "clicked", G_CALLBACK(on_next_layer), NULL);
+    g_signal_connect(new_layer_button, "clicked", G_CALLBACK(on_new_layer), NULL);
+    
     //      Drawing signals
     setup_drawing(drawing_area);
     
