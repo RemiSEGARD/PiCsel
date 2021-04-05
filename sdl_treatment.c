@@ -160,6 +160,14 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
     // gonna need to add pixel in arguments once palette is made
     Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, 100, 0, 255, 255);
     GdkRectangle rect;
+    if (x < 0 || x > win_x || y < 0 || y > win_y)
+    {
+        rect.x = 0;
+        rect.y = 0;
+        rect.width = 0;
+        rect.height = 0;
+        return rect;
+    }
     if (win_x < win_y)
     {
         rect.x = x - x % (win_x / sdl_data.width);
@@ -199,6 +207,11 @@ void main_sdl(int width, int height)
     sdl_data.curframe = 0;
     // import given file
     // draw given file
-    put_pixel(sdl_data.current->img, 0, 0, SDL_MapRGBA(sdl_data.current->img->format, 100, 100, 100, 255));
-    SDL_SaveBMP(sdl_data.current->img, "hi.bmp");
+    //put_pixel(sdl_data.current->img, 0, 0, SDL_MapRGBA(sdl_data.current->img->format, 100, 100, 100, 255));
+    //printf("%lu hi\n", sdl_data.current->img);
+    //printf("hi\n");
+    // display
+    /*sdl_init();
+    SDL_Surface* screen_surface = display_image(sdl_data.current->img);
+    SDL_FreeSurface(screen_surface);*/
 }
