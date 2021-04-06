@@ -53,6 +53,7 @@ void add_layer(Layer *list, int w, int h)
     if (new->img == NULL) {
         errx(1, "SDL_CreateRGBSurface() failed");
     }
+    SDL_FillRect(new->img, NULL, 0xffffffff);
 }
 
 // Remove the i-th layer from the list

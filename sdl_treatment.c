@@ -182,9 +182,16 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
         rect.y = y - y % (win_x / sdl_data.width);
         rect.width = win_x / sdl_data.width;
         rect.height = win_x / sdl_data.width;
-        put_pixel(sdl_data.current->img, 
-                x * sdl_data.width / (win_x - win_x % sdl_data.width),
-                y * sdl_data.width / (win_x - win_x % sdl_data.width), pixel);
+        if (x >= 0 && y >= 0 
+                && y < sdl_data.height * rect.height
+                && x < sdl_data.width * rect.width)
+        {
+            put_pixel(sdl_data.current->img, 
+                    x * sdl_data.width / (win_x - win_x % sdl_data.width),
+                    y * sdl_data.width / (win_x - win_x % sdl_data.width),
+                    pixel);
+            return rect;
+        }
     }
     else
     {
@@ -192,11 +199,19 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
         rect.y = y - y % (win_y / sdl_data.height);
         rect.width = win_y / sdl_data.height;
         rect.height = win_y / sdl_data.height;
-        put_pixel(sdl_data.current->img,
-                x * sdl_data.height / (win_y - win_y % sdl_data.height),
-                y * sdl_data.height / (win_y - win_y % sdl_data.height),
-                pixel);
+        if (x >= 0 && y >= 0 
+                && y < sdl_data.height * rect.height
+                && x < sdl_data.width * rect.width)
+        {
+            put_pixel(sdl_data.current->img,
+                    x * sdl_data.height / (win_y - win_y % sdl_data.height),
+                    y * sdl_data.height / (win_y - win_y % sdl_data.height),
+                    pixel);
+            return rect;
+        }
     }
+    rect.width = 0;
+    rect.height = 0;
     return rect;
 }
 
