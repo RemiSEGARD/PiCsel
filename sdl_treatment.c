@@ -16,48 +16,48 @@ struct SDL_data sdl_data;
 
 void prev_frame()
 {
-	if(sdl_data.curframe != 0)
-	{
-		select_layer(sdl_data.curframe-1, sdl_data.curlayer);
-	}
+    if(sdl_data.curframe != 0)
+    {
+        select_layer(sdl_data.curframe-1, sdl_data.curlayer);
+    }
 }
 
 void next_frame()
 {
-        if(sdl_data.current->next != NULL)//a modifier!
-	{
-		select_layer(sdl_data.curframe+1, sdl_data.curlayer);
-	}
+    if(sdl_data.curframe < sdl_data.nbframe - 1)
+    {
+        select_layer(sdl_data.curframe+1, sdl_data.curlayer);
+    }
 }
 
 void new_frame()
 {
-        add_frame(sdl_data.frames, sdl_data.width, sdl_data.height, sdl_data.nblayer);
-	//add here: nbframes++;
+    add_frame(sdl_data.frames, sdl_data.width, sdl_data.height, sdl_data.nblayer);
+    sdl_data.nbframe++;
 }
 
 void prev_layer()
 {
-        if(sdl_data.curlayer != 0)
-        {
-                sdl_data.curframe--;
-                sdl_data.current = sdl_data.current->prev;
-        }
+    if(sdl_data.curlayer != 0)
+    {
+        sdl_data.curframe--;
+        sdl_data.current = sdl_data.current->prev;
+    }
 }
 
 void next_layer()
 {
-        if(sdl_data.current->next != NULL)
-        {
-		sdl_data.curframe++;
-		sdl_data.current = sdl_data.current->next;
-        }
+    if(sdl_data.current->next != NULL)
+    {
+        sdl_data.curframe++;
+        sdl_data.current = sdl_data.current->next;
+    }
 }
 
 void new_layer()
 {
-	add_layer_to_all_frames(sdl_data.frames, sdl_data.width, sdl_data.height);
-        sdl_data.nblayer++;
+    add_layer_to_all_frames(sdl_data.frames, sdl_data.width, sdl_data.height);
+    sdl_data.nblayer++;
 }
 
 
@@ -112,20 +112,20 @@ Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y)
 
     switch (surface->format->BytesPerPixel)
     {
-    case 1:
-        return *p;
+        case 1:
+            return *p;
 
-    case 2:
-        return *(Uint16 *)p;
+        case 2:
+            return *(Uint16 *)p;
 
-    case 3:
-        if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-            return p[0] << 16 | p[1] << 8 | p[2];
-        else
-            return p[0] | p[1] << 8 | p[2] << 16;
+        case 3:
+            if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+                return p[0] << 16 | p[1] << 8 | p[2];
+            else
+                return p[0] | p[1] << 8 | p[2] << 16;
 
-    case 4:
-        return *(Uint32 *)p;
+        case 4:
+            return *(Uint32 *)p;
     }
 
     return 0;
@@ -214,7 +214,7 @@ void export_current_frame(char *filename)
 GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
 {
     // gonna need to add pixel in arguments once palette is made
-    Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, 100, 0, 255, 255);
+    Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, 0, 0, 0, 255);
     GdkRectangle rect;
     if (x < 0 || x > win_x || y < 0 || y > win_y)
     {
@@ -274,6 +274,7 @@ void main_sdl(int width, int height)
     sdl_data.frames = init_frame(width, height);
     sdl_data.current = sdl_data.frames->next->layer->next;
     sdl_data.nblayer = 1;
+    sdl_data.nbframe = 1;
     sdl_data.curlayer = 0;
     sdl_data.curframe = 0;
     // import given file
@@ -283,8 +284,8 @@ void main_sdl(int width, int height)
     //printf("hi\n");
     // display
     /*sdl_init();
-    SDL_Surface* screen_surface = display_image(sdl_data.current->img);
-    SDL_FreeSurface(screen_surface);*/
+      SDL_Surface* screen_surface = display_image(sdl_data.current->img);
+      SDL_FreeSurface(screen_surface);*/
 }
 
 void main_sdl_import(char *filename)
@@ -301,10 +302,11 @@ void main_sdl_import(char *filename)
     SDL_FreeSurface(import);
     sdl_data.current->img = betterimport;
     sdl_data.nblayer = 1;
+    sdl_data.nbframe = 1;
     sdl_data.curlayer = 0;
     sdl_data.curframe = 0;
-    
-    
+
+
     // SDL_FreeSurface(screen_surface);
 }
 

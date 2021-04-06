@@ -4,40 +4,47 @@
 #include "drawing.h"
 #include "sdl_treatment.h"
 
+GtkDrawingArea *darea;
+
 void on_quit()
 {
-	//free_all call = free liste de layers + les sdl surface
-	gtk_main_quit();
+    //free_all call = free liste de layers + les sdl surface
+    gtk_main_quit();
 }
 
 void on_prev_frame()
 {
-	prev_frame();
+    prev_frame();
+    SDL_Surface *surface = compress_frame(-1);
+    redraw_surface(darea, surface);
 }
 
 void on_next_frame()
 {
-	next_frame();
+    next_frame();
+    SDL_Surface *surface = compress_frame(-1);
+    redraw_surface(darea, surface);
+
 }
 
 void on_new_frame()
 {
-	new_frame();
+    new_frame();
 }
 
 void on_prev_layer()
 {
-	prev_layer();
+    prev_layer();
 }
 
 void on_next_layer()
 {
-	next_layer();
+    next_layer();
 }
 
 void on_new_layer()
 {
-	new_layer();
+    new_layer();
 }
 
 int w;
@@ -87,6 +94,7 @@ int main_ui(int x, int y, char *filename)
             gtk_builder_get_object(builder, "draw_area"));
     GtkMenuItem *export_button = GTK_MENU_ITEM(
             gtk_builder_get_object(builder, "export-button"));
+    darea = drawing_area;
 
     GtkButton* prev_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "prev_frame"));
     GtkButton* next_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_frame"));
@@ -105,33 +113,33 @@ int main_ui(int x, int y, char *filename)
         // BUT we also cant do anything after gtk_main()....
         main_sdl_import(filename);
     }
-    
+
 
     // Connects signal handlers
     //      Closing signal
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-    
+
     // MenuBar Signal
     g_signal_connect(export_button, "activate", G_CALLBACK(on_export), NULL);
     //gtk_menu_item_activate(export_button);
-    
+
     g_signal_connect(prev_frame_button, "clicked", G_CALLBACK(on_prev_frame), NULL);
     g_signal_connect(next_frame_button, "clicked", G_CALLBACK(on_next_frame), NULL);
     g_signal_connect(new_frame_button, "clicked", G_CALLBACK(on_new_frame), NULL);
     g_signal_connect(prev_layer_button, "clicked", G_CALLBACK(on_prev_layer), NULL);
     g_signal_connect(next_layer_button, "clicked", G_CALLBACK(on_next_layer), NULL);
     g_signal_connect(new_layer_button, "clicked", G_CALLBACK(on_new_layer), NULL);
-    
+
     //      Drawing signals
     setup_drawing(drawing_area);
-    
+
     w = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
     h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
-    
+
     g_signal_connect(drawing_area, "draw", G_CALLBACK(on_drawingarea_draw), NULL);
     // Runs the main loop
     gtk_main();
-    
+
 
     return 0;
 }

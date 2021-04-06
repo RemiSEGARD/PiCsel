@@ -13,6 +13,7 @@ typedef struct SDL_data
     Frame *frames;
     Layer *current;
     int nblayer;
+    int nbframe;
     int curframe;
     int curlayer;
 } SDLdata;
