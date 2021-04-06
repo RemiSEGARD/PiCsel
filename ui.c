@@ -95,7 +95,6 @@ int main_ui(int x, int y, char *filename)
     GtkButton* next_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_layer"));
     GtkButton* new_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_layer"));
 
-
     if (x != 0)
         main_sdl(x, y);
     else
@@ -130,7 +129,6 @@ int main_ui(int x, int y, char *filename)
     h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
     
     g_signal_connect(drawing_area, "draw", G_CALLBACK(on_drawingarea_draw), NULL);
-    
     // Runs the main loop
     gtk_main();
     
