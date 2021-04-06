@@ -6,38 +6,38 @@
 
 void on_quit()
 {
-	//free_all call
+	//free_all call = free liste de layers + les sdl surface
 	gtk_main_quit();
 }
 
 void on_prev_frame()
 {
-	//TODO
+	prev_frame();
 }
 
 void on_next_frame()
 {
-	//TODO
+	next_frame();
 }
 
 void on_new_frame()
 {
-	//TODO
+	new_frame();
 }
 
 void on_prev_layer()
 {
-	//TODO
+	prev_layer();
 }
 
 void on_next_layer()
 {
-	//TODO
+	next_layer();
 }
 
 void on_new_layer()
 {
-	//TODO
+	new_layer();
 }
 
 int w;
@@ -96,6 +96,18 @@ int main_ui(int x, int y, char *filename)
     GtkButton* new_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_layer"));
 
 
+    if (x != 0)
+        main_sdl(x, y);
+    else
+    {
+        // need to create a thread i think
+        // it looks like gtk is not ready yet to receive drawing stuff
+        // since gtk_main isnt started
+        // BUT we also cant do anything after gtk_main()....
+        main_sdl_import(filename);
+    }
+    
+
     // Connects signal handlers
     //      Closing signal
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -114,17 +126,6 @@ int main_ui(int x, int y, char *filename)
     //      Drawing signals
     setup_drawing(drawing_area);
     
-    if (x != 0)
-        main_sdl(x, y);
-    else
-    {
-        // need to create a thread i think
-        // it looks like gtk is not ready yet to receive drawing stuff
-        // since gtk_main isnt started
-        // BUT we also cant do anything after gtk_main()....
-        main_sdl_import(filename);
-    }
-
     w = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
     h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
     

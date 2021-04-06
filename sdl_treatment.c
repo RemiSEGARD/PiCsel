@@ -8,9 +8,57 @@
 #include "img_layer.h"
 #include "img_frame.h"
 
+void select_layer(int frame, int layer);
+
 struct SDL_data sdl_data;
 
 //SDL_Surface *screen_surface;
+
+void prev_frame()
+{
+	if(sdl_data.curframe != 0)
+	{
+		select_layer(sdl_data.curframe-1, sdl_data.curlayer);
+	}
+}
+
+void next_frame()
+{
+        if(sdl_data.current->next != NULL)//a modifier!
+	{
+		select_layer(sdl_data.curframe+1, sdl_data.curlayer);
+	}
+}
+
+void new_frame()
+{
+        add_frame(sdl_data.frames, sdl_data.width, sdl_data.height, sdl_data.nblayer);
+	//add here: nbframes++;
+}
+
+void prev_layer()
+{
+        if(sdl_data.curlayer != 0)
+        {
+                sdl_data.curframe--;
+                sdl_data.current = sdl_data.current->prev;
+        }
+}
+
+void next_layer()
+{
+        if(sdl_data.current->next != NULL)
+        {
+		sdl_data.curframe++;
+		sdl_data.current = sdl_data.current->next;
+        }
+}
+
+void new_layer()
+{
+	add_layer_to_all_frames(sdl_data.frames, sdl_data.width, sdl_data.height);
+        sdl_data.nblayer++;
+}
 
 
 Frame* get_frame(int i)
