@@ -77,29 +77,101 @@ void add_layer_to_all_frames(Frame *list, int w, int h)
 // Remove the i-th frame of the linked list
 void rm_frame(Frame *list, int i)
 {
-    // TODO
+    Frame *tmp = list;
+    while (i > 0 && tmp->next != NULL)
+    {
+        i--;
+        tmp = tmp->next;
+    }
+    if (i > 0)
+        errx(EXIT_FAILURE, "index out of bound");
+    Frame *stock = tmp;
+    while (tmp->next != NULL)
+    {
+        tmp->index--;
+        tmp = tmp->next;
+    }
+    Frame *prev = stock->prev;
+    prev->next = stock->next;
+    free(stock);
+    SDL_FreeSurface(stock->img);
+
 }
 
 // Swap the i-th frame with the j-th frame
 void swap_frame(Frame *list, int i, int j)
 {
-    // TODO
+    Frame *frame_i = list;
+    Frame *frame_j = list;
+    while (i > 0 && frame_i->next != NULL)
+    {
+        i--;
+        frame_i = frame_i->next;
+    }
+    while (j > 0 && frame_j->next != NULL)
+    {
+        j--;
+        frame_j = frame_j->next;
+    }
+    // swap index
+    int index = frame_i->index;
+    frame_i->index = frame_j->index;
+    frame_j->index = index;
+    // swap prev
+    Frame *tmp = frame_i->prev;
+    frame_i->prev = frame_j->prev;
+    frame_j->prev = tmp;
+    tmp->next = frame_j;
+    // swap next
+    tmp = frame_i->next;
+    frame_i->next = frame_j->next;
+    frame_j->next = tmp;
+    // renew the prev and next of layers next to layer_i and layer_j
+    tmp = frame_i->prev;
+    tmp->next = frame_i;
+    tmp = frame_i->next;
+    if (tmp != NULL)
+        tmp->prev = frame_i;
+    tmp = frame_j->prev;
+    tmp->next = frame_j;
+    tmp = frame_j->next;
+    if (tmp != NULL)
+        tmp->prev = frame_j;
 }
 
 // Returns the length of the list
 size_t length_frame(Frame *list)
 {
-    // TODO
+    size_t len = 0;
+    while(list->next != NULL)
+    {
+        len++;
+        list = list->next;
+    }
+    return len;
+
 }
 
 // Returns the number of layer
 size_t nb_layer(Frame *list)
 {
-    // TODO
+    Layer* layer = list->next->layer;
+    size_t len = 0;
+    while (layer != NULL)
+    {
+        layer = layer->next;
+        len++;
+    }
+    return len;
 }
 
 // Merges all the layers of a frame
 void get_image(Frame *frame)
 {
     // TODO
+    Layer *layer = frame->layer;
+    while(layer != NULL)
+    {
+        layer = layer->next;
+    }
 }
