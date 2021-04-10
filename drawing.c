@@ -7,6 +7,7 @@
 /* Surface to store current scribbles */
 static cairo_surface_t *surface = NULL;
 
+
 /* Sets the whole surface to white */
 static void clear_surface (void)
 {
@@ -55,14 +56,14 @@ static gboolean draw_cb(GtkWidget *widget, cairo_t *cr, gpointer data)
 }
 
 /* Draw a rectangle on the surface at the given position */
-static void draw_brush (GtkWidget *widget, gdouble x, gdouble y)
+static void draw_brush (GtkWidget *widget, gdouble x, gdouble y, GdkRGBA* color)
 {
     (void) widget;
     cairo_t *cr;
     
     /* Paint to the surface, where we store our state */
     cr = cairo_create (surface);
-    
+    cairo_set_source_rgba(cr, color->red, color->green, color->blue, color->alpha);
     GdkRectangle rect = calculate_coord(x, y, 
             gtk_widget_get_allocated_width(widget),
             gtk_widget_get_allocated_height(widget));
@@ -131,7 +132,10 @@ static gboolean button_press_event_cb (GtkWidget *widget,
 
     if (event->button == GDK_BUTTON_PRIMARY)
     {
-        draw_brush (widget, event->x, event->y);
+        GdkRGBA* color = malloc(sizeof(GdkRGBA));
+        gtk_color_chooser_get_rgba(data,color);
+
+        draw_brush (widget, event->x, event->y, color);
     }
     else if (event->button == GDK_BUTTON_SECONDARY)
     {
@@ -150,8 +154,10 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
     if (surface == NULL)
         return FALSE;
 
+    GdkRGBA* color = malloc(sizeof(GdkRGBA));
+    gtk_color_chooser_get_rgba(data,color);
     if (event->state & GDK_BUTTON1_MASK)
-        draw_brush (widget, event->x, event->y);
+        draw_brush (widget, event->x, event->y,color);
 
     return TRUE;
 }
@@ -168,7 +174,7 @@ void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surface)
 }
 
 // Setups the events for the drawing area
-void setup_drawing(GtkDrawingArea *drawing_area)
+void setup_drawing(GtkDrawingArea *drawing_area, GtkColorChooser *color_select)
 {
     //      Signals for drawing
     //      Drawing areas do not handle clicks, this add the events
@@ -181,9 +187,9 @@ void setup_drawing(GtkDrawingArea *drawing_area)
             G_CALLBACK (configure_event_cb), NULL);
     //      Clicking events
     g_signal_connect (drawing_area, "motion-notify-event",
-            G_CALLBACK (motion_notify_event_cb), NULL);
+            G_CALLBACK (motion_notify_event_cb), color_select);
     g_signal_connect (drawing_area, "button-press-event",
-            G_CALLBACK (button_press_event_cb), NULL);
+            G_CALLBACK (button_press_event_cb), color_select);
 
     return;
 }

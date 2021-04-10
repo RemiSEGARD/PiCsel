@@ -96,6 +96,9 @@ int main_ui(int x, int y, char *filename)
             gtk_builder_get_object(builder, "export-button"));
     darea = drawing_area;
 
+    GtkColorChooser* color_select = GTK_COLOR_CHOOSER(gtk_builder_get_object(builder,"color"));
+
+
     GtkButton* prev_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "prev_frame"));
     GtkButton* next_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_frame"));
     GtkButton* new_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_frame"));
@@ -131,7 +134,7 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(new_layer_button, "clicked", G_CALLBACK(on_new_layer), NULL);
 
     //      Drawing signals
-    setup_drawing(drawing_area);
+    setup_drawing(drawing_area, color_select);
 
     w = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
     h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
