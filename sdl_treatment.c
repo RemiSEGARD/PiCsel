@@ -211,10 +211,10 @@ void export_current_frame(char *filename)
  */
 
 
-GdkRectangle calculate_coord(int x, int y, int win_x, int win_y)
+GdkRectangle calculate_coord(int x, int y, int win_x, int win_y, GdkRGBA* color)
 {
     // gonna need to add pixel in arguments once palette is made
-    Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, 0, 0, 0, 255);
+    Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
     GdkRectangle rect;
     if (x < 0 || x > win_x || y < 0 || y > win_y)
     {

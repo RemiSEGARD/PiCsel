@@ -66,7 +66,7 @@ static void draw_brush (GtkWidget *widget, gdouble x, gdouble y, GdkRGBA* color)
     cairo_set_source_rgba(cr, color->red, color->green, color->blue, color->alpha);
     GdkRectangle rect = calculate_coord(x, y, 
             gtk_widget_get_allocated_width(widget),
-            gtk_widget_get_allocated_height(widget));
+            gtk_widget_get_allocated_height(widget), color);
     cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
     cairo_fill (cr);
     
@@ -78,6 +78,7 @@ static void draw_brush (GtkWidget *widget, gdouble x, gdouble y, GdkRGBA* color)
     */
     gtk_widget_queue_draw_area (widget, rect.x, rect.y, 
             rect.width, rect.height);
+    free(color);
 }
 
 
@@ -134,7 +135,6 @@ static gboolean button_press_event_cb (GtkWidget *widget,
     {
         GdkRGBA* color = malloc(sizeof(GdkRGBA));
         gtk_color_chooser_get_rgba(data,color);
-
         draw_brush (widget, event->x, event->y, color);
     }
     else if (event->button == GDK_BUTTON_SECONDARY)
@@ -143,6 +143,7 @@ static gboolean button_press_event_cb (GtkWidget *widget,
         gtk_widget_queue_draw (widget);
     }
 
+    // free(color);
     return TRUE;
 }
 
