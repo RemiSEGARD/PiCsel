@@ -36,6 +36,14 @@ void export_current_frame(char *filename);
 
 GdkRectangle calculate_coord(int x, int y, int win_x, int win_y, GdkRGBA* color);
 
+void fill(int x, int y, int win_x, int win_y, GdkRGBA* color);
+
+void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color);
+
+void line(int x1, int y1, int x2, int y2,int win_x, int win_y, GdkRGBA* color);
+
+//void circle(int x, int y, int r, GdkRGBA* color);
+
 void main_sdl(int width, int height);
 
 void main_sdl_import(char *filename);

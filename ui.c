@@ -71,6 +71,7 @@ void on_export(GtkMenuItem *item, gpointer data)
     export_current_frame("export.bmp");
 }
 
+
 int main_ui(int x, int y, char *filename)
 {
     // Initilizes GTK

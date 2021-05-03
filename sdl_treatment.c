@@ -7,8 +7,11 @@
 #include "sdl_treatment.h"
 #include "img_layer.h"
 #include "img_frame.h"
+#include <math.h>
 
 void select_layer(int frame, int layer);
+
+void fill_sdl(int x, int y, GdkRGBA* color, Uint8 match_r, Uint8 match_g,Uint8 match_b,Uint8 match_a);
 
 struct SDL_data sdl_data;
 
@@ -263,6 +266,203 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y, GdkRGBA* color)
     return rect;
 }
 
+void fill(int x, int y, int win_x, int win_y, GdkRGBA* color)
+{
+    // function called by drawing.c
+    // prepares everything for the actual fill function
+
+    // calculate the new coordinates
+    if (win_x < win_y)
+    {
+        x = x * sdl_data.width / (win_x - win_x % sdl_data.width);
+        y = y * sdl_data.width / (win_x - win_x % sdl_data.width);
+    }
+    else
+    {
+        x = x * sdl_data.height / (win_y - win_y % sdl_data.height);
+        y = y * sdl_data.height / (win_y - win_y % sdl_data.height);
+    }
+    Uint8 r,g,b,a;
+    // gets the color that we want to replace by GdkRGBA* color
+    Uint32 pixel = get_pixel(sdl_data.current->img, x, y);
+    SDL_GetRGBA(pixel, sdl_data.current->img->format, &r, &g, &b, &a);
+    g_print("%d\n",r);
+    fill_sdl(x,y,color,r,g,b,a);
+}
+
+void fill_sdl(int x, int y, GdkRGBA* color, Uint8 match_r, Uint8 match_g,Uint8 match_b,Uint8 match_a)
+{
+    // Fills on the SDL_Surface
+    // match_r, match_g, match_b, match_a represent the rgba values needed to match the color
+    if (x < 0 || y < 0 || x >= sdl_data.width || y >= sdl_data.height)
+        return;
+    Uint8 r,g,b,a;
+    Uint32 pixel = get_pixel(sdl_data.current->img, x, y);
+    SDL_GetRGBA(pixel, sdl_data.current->img->format, &r, &g, &b, &a);
+    
+    // condition needs to be changed to detect the proper pixel now it only detects white pixels
+    if (r == 255 && g == 255 && b == 255)
+    {
+        // converts the color from GdkRGBA to a value from 0 to 255
+        Uint32 p = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
+        put_pixel(sdl_data.current->img, x, y, p);
+        // launches all the recursive function to draw the pixels around current pixel
+        fill_sdl(x+1,y,color,match_r,match_g,match_b,match_a);
+        fill_sdl(x-1,y,color,match_r,match_g,match_b,match_a);
+        fill_sdl(x,y+1,color,match_r,match_g,match_b,match_a);
+        fill_sdl(x,y-1,color,match_r,match_g,match_b,match_a);
+    }
+}
+
+
+void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
+{
+    // TODO
+    // Draws the line from (x1,y1) to (x2,y2) onthe SDL_Surface
+    if (win_x < win_y)
+    {
+        x1 = x1 * sdl_data.width / (win_x - win_x % sdl_data.width);
+        y1 = y1 * sdl_data.width / (win_x - win_x % sdl_data.width);
+        x2 = x2 * sdl_data.width / (win_x - win_x % sdl_data.width);
+        y2 = y2 * sdl_data.width / (win_x - win_x % sdl_data.width);
+    }
+    else
+    {
+        x1 = x1 * sdl_data.height / (win_y - win_y % sdl_data.height);
+        y1 = y1 * sdl_data.height / (win_y - win_y % sdl_data.height);
+        x2 = x2 * sdl_data.height / (win_y - win_y % sdl_data.height);
+        y2 = y2 * sdl_data.height / (win_y - win_y % sdl_data.height);
+    }
+    // Calculate coefficient
+    int alpha = (y2-y1)/(x2-x1);
+    // Convert GdkRGBA color to a value usable by SDL
+    Uint32 p = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
+    // Draws the line
+}
+
+void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color)
+{
+    // Draws a rectangle from (x1,y1) to (x2,y2) on the SDL_Surface
+    // Calculate the new coordinates
+    if (win_x < win_y)
+    {
+        x1 = x1 * sdl_data.width / (win_x - win_x % sdl_data.width);
+        y1 = y1 * sdl_data.width / (win_x - win_x % sdl_data.width);
+        x2 = x2 * sdl_data.width / (win_x - win_x % sdl_data.width);
+        y2 = y2 * sdl_data.width / (win_x - win_x % sdl_data.width);
+    }
+    else
+    {
+        x1 = x1 * sdl_data.height / (win_y - win_y % sdl_data.height);
+        y1 = y1 * sdl_data.height / (win_y - win_y % sdl_data.height);
+        x2 = x2 * sdl_data.height / (win_y - win_y % sdl_data.height);
+        y2 = y2 * sdl_data.height / (win_y - win_y % sdl_data.height);
+    }
+    // case 1
+    if (x1 < x2 && y1 < y2)
+    {
+        // Gets height and width of rectangle
+        int h = y2 - y1;
+        int w = x2 - x1;
+        // Convert GdkRGBA color to a value usable by SDL
+        Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
+        // Draws the horizontal lines
+        for (int i = 0; i < w; i++)
+        {
+            put_pixel(sdl_data.current->img, x1 + i, y1, pixel);
+            put_pixel(sdl_data.current->img, x1 + i, y1 + h, pixel);
+        }
+        // Draws the verticle lines
+        for (int i = 0; i <= h; i++)
+        {
+            put_pixel(sdl_data.current->img, x1, y1 + i, pixel);
+            put_pixel(sdl_data.current->img, x1 + w, y1 + i, pixel);
+        }
+    }
+    // case 2
+    if (x1 > x2 && y1 > y2)
+    {
+        // Gets height and width of rectangle
+        int h = y1 - y2;
+        int w = x1 - x2;
+        // Convert GdkRGBA color to a value usable by SDL
+        Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
+        // Draws the horizontal lines
+        for (int i = 0; i < w; i++)
+        {
+            put_pixel(sdl_data.current->img, x1 - i, y1, pixel);
+            put_pixel(sdl_data.current->img, x1 - i, y1 - h, pixel);
+        }
+        // Draws the verticle lines
+        for (int i = 0; i <= h; i++)
+        {
+            put_pixel(sdl_data.current->img, x1, y1 - i, pixel);
+            put_pixel(sdl_data.current->img, x1 - w, y1 - i, pixel);
+        }
+    }
+    // case 3
+    if (x1 < x2 && y1 > y2)
+    {
+        // Gets height and width of rectangle
+        int h = y1 - y2;
+        int w = x2 - x1;
+        // Convert GdkRGBA color to a value usable by SDL
+        Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
+        // Draws the horizontal lines
+        for (int i = 0; i < w; i++)
+        {
+            put_pixel(sdl_data.current->img, x1 + i, y1, pixel);
+            put_pixel(sdl_data.current->img, x1 + i, y1 - h, pixel);
+        }
+        // Draws the verticle lines
+        for (int i = 0; i <= h; i++)
+        {
+            put_pixel(sdl_data.current->img, x1, y1 - i, pixel);
+            put_pixel(sdl_data.current->img, x1 + w, y1 - i, pixel);
+        }
+    }
+    // case 4
+    if (x1 > x2 && y1 < y2)
+    {
+        // Gets height and width of rectangle
+        int h = y2 - y1;
+        int w = x1 - x2;
+        // Convert GdkRGBA color to a value usable by SDL
+        Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
+        // Draws the horizontal lines
+        for (int i = 0; i < w; i++)
+        {
+            put_pixel(sdl_data.current->img, x1 - i, y1, pixel);
+            put_pixel(sdl_data.current->img, x1 - i, y1 + h, pixel);
+        }
+        // Draws the verticle lines
+        for (int i = 0; i <= h; i++)
+        {
+            put_pixel(sdl_data.current->img, x1, y1 + i, pixel);
+            put_pixel(sdl_data.current->img, x1 - w, y1 + i, pixel);
+        }
+    }
+    // redraws surface
+    SDL_Surface *tmp = compress_frame(-1);
+}
+
+void circle(int x, int y, int r)
+{
+    // TODO
+    // draws a circle with center coordinates of (x,y) and od radius r
+    static const double PI = 3.1415926535;
+    double i, angle, x1, y1;
+    for (i = 0; i < 360; i += 0.1)
+    {
+        angle = i;
+        x1 = r * cos(angle * PI / 180);
+        y1 = r * sin(angle * PI / 180);
+        //Uint32 p = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
+        Uint32 p = SDL_MapRGB(sdl_data.current->img->format, 50, 50, 50);
+        put_pixel(sdl_data.current->img, x + x1, y + y1, p);
+    }
+}
+
 void main_sdl(int width, int height)
 {
     // Creates a new SDL_Surface
@@ -277,6 +477,7 @@ void main_sdl(int width, int height)
     sdl_data.nbframe = 1;
     sdl_data.curlayer = 0;
     sdl_data.curframe = 0;
+    circle(10,10,5);
     // import given file
     // draw given file
     //put_pixel(sdl_data.current->img, 0, 0, SDL_MapRGBA(sdl_data.current->img->format, 100, 100, 100, 255));
