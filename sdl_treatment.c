@@ -317,7 +317,6 @@ void fill_sdl(int x, int y, GdkRGBA* color, Uint8 match_r, Uint8 match_g,Uint8 m
 
 void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
 {
-    // TODO
     // Draws the line from (x1,y1) to (x2,y2) onthe SDL_Surface
     if (win_x < win_y)
     {
@@ -333,11 +332,124 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
         x2 = x2 * sdl_data.height / (win_y - win_y % sdl_data.height);
         y2 = y2 * sdl_data.height / (win_y - win_y % sdl_data.height);
     }
-    // Calculate coefficient
-    int alpha = (y2-y1)/(x2-x1);
     // Convert GdkRGBA color to a value usable by SDL
-    Uint32 p = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
+    Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
     // Draws the line
+    // in case of straight vertical lines
+    if (x1 == x2)
+    {
+        if (y1>y2)
+        {
+            while (y1>y2)
+            {
+                put_pixel(sdl_data.current->img,x1,y1,pixel);
+                y1--;
+            }
+        }
+        if (y1<y2)
+        {
+            while (y1<y2)
+            {
+                put_pixel(sdl_data.current->img,x1,y1,pixel);
+                y1++;
+            }
+        }
+        return;
+    }
+    // in case of straight horizontal lines
+    if (y1 == y2)
+    {
+        if (x1>x2)
+        {
+            while (x1>x2)
+            {
+                put_pixel(sdl_data.current->img,x1,y1,pixel);
+                x1--;
+            }
+        }
+        if (x1<x2)
+        {
+            while (x1<x2)
+            {
+                put_pixel(sdl_data.current->img,x1,y1,pixel);
+                x1++;
+            }
+        }
+        return;
+    }
+    int dx, dy, p, x, y;
+    // Swap in case x1>x2 and y1>y2
+    if (x1 > x2 && y1 > y2)
+    {
+        int tmp = x1;
+        x1 = x2;
+        x2 = tmp;
+        tmp = y1;
+        y1 = y2;
+        y2 = tmp;
+    }
+    // case x1<x2 and y1<y2
+    if (x1<x2 && y1 < y2)
+    {
+        dx = x2-x1;
+        dy = y2 - y1;
+
+        x = x1;
+        y = y1;
+        p = 2*dy-dx;
+        while (x<x2)
+        {
+            if (p >= 0)
+            {
+                put_pixel(sdl_data.current->img,x,y,pixel);
+                y=y+1;
+                p=p+2*dy-2*dx;
+            }
+            else
+            {
+                put_pixel(sdl_data.current->img,x,y,pixel);
+                p=p+2*dy;
+            }
+        x=x+1;
+        }
+    }
+    // Swap in case x1 > x2 and y1 < y2
+    if (x1 > x2 && y1 < y2)
+    {
+        int tmp = x1;
+        x1 = x2;
+        x2 = tmp;
+        tmp = y1;
+        y1 = y2;
+        y2 = tmp;
+    }
+    // case x1 < x2 and y1>y2
+    if (x1 < x2 && y1 > y2)
+    {
+        dx = x2-x1;
+        dy = y1 - y2;
+
+        x = x1;
+        y = y1;
+        p = 2*dy-dx;
+        while (x<x2)
+        {
+            if (p >= 0)
+            {
+                put_pixel(sdl_data.current->img,x,y,pixel);
+                y=y-1;
+                p=p+2*dy-2*dx;
+            }
+            else
+            {
+                put_pixel(sdl_data.current->img,x,y,pixel);
+                p=p+2*dy;
+            }
+        x=x+1;
+        }
+    }
+    // Just in case x1 == x2 and y1 == y2
+    put_pixel(sdl_data.current->img,x1,y1,pixel);
 }
 
 void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color)
