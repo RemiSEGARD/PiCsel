@@ -30,7 +30,7 @@ Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y);
 
 void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel);
 
-SDL_Surface *compress_frame(int i);
+SDL_Surface *compress_frame(int i, int keep_bg);
 
 void export_current_frame(char *filename);
 

@@ -15,14 +15,14 @@ void on_quit()
 void on_prev_frame()
 {
     prev_frame();
-    SDL_Surface *surface = compress_frame(-1);
+    SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
 }
 
 void on_next_frame()
 {
     next_frame();
-    SDL_Surface *surface = compress_frame(-1);
+    SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
 
 }
@@ -59,7 +59,7 @@ void on_drawingarea_draw(GtkWidget *widget, gpointer data)
     {
         w = gtk_widget_get_allocated_width(widget);
         h = gtk_widget_get_allocated_height(widget);
-        SDL_Surface *surface = compress_frame(-1);
+        SDL_Surface *surface = compress_frame(-1, 1);
         redraw_surface((GtkDrawingArea *)widget, surface);
     }
 }

@@ -73,10 +73,11 @@ static void draw_brush (GtkWidget *widget, gdouble x, gdouble y, GdkRGBA* color)
     
     /* Paint to the surface, where we store our state */
     cr = cairo_create (surface);
-    cairo_set_source_rgba(cr, color->red, color->green, color->blue, color->alpha);
     GdkRectangle rect = calculate_coord(x, y, 
             gtk_widget_get_allocated_width(widget),
             gtk_widget_get_allocated_height(widget), color);
+    
+    cairo_set_source_rgba(cr, color->red, color->green, color->blue, color->alpha);
     
     //fill(x,y,gtk_widget_get_allocated_width(widget),gtk_widget_get_allocated_height(widget),color);
     

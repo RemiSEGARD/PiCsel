@@ -21,6 +21,7 @@ void prev_frame()
 {
     if(sdl_data.curframe != 0)
     {
+        sdl_data.curframe--;
         select_layer(sdl_data.curframe-1, sdl_data.curlayer);
     }
 }
@@ -29,6 +30,7 @@ void next_frame()
 {
     if(sdl_data.curframe < sdl_data.nbframe - 1)
     {
+        sdl_data.curframe++;
         select_layer(sdl_data.curframe+1, sdl_data.curlayer);
     }
 }
@@ -43,7 +45,7 @@ void prev_layer()
 {
     if(sdl_data.curlayer != 0)
     {
-        sdl_data.curframe--;
+        sdl_data.curlayer--;
         sdl_data.current = sdl_data.current->prev;
     }
 }
@@ -52,7 +54,7 @@ void next_layer()
 {
     if(sdl_data.current->next != NULL)
     {
-        sdl_data.curframe++;
+        sdl_data.curlayer++;
         sdl_data.current = sdl_data.current->next;
     }
 }
@@ -170,23 +172,61 @@ void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel)
     }
 }
 
-SDL_Surface *compress_frame(int i)
+Uint32 compress_pixel(Layer *lay, int x, int y)
+{
+    Layer *l = lay;
+    Uint8 r, g, b, a;
+    r = 0;
+    g = 0;
+    b = 0;
+    a = 0;
+    while (l != NULL)
+    {
+        Uint32 pixel = get_pixel(l->img, x, y);
+        Uint8 new_a;
+        Uint8 new_r;
+        Uint8 new_g;
+        Uint8 new_b;
+        SDL_GetRGBA(pixel, l->img->format,
+                &new_r, &new_g, &new_b, &new_a);
+        double r1 = r, g1 = g, b1 = b, a1 = a;
+        double r0 = new_r, g0 = new_g, b0 = new_b, a0 = new_a;
+        r1 /= 255;
+        g1 /= 255;
+        b1 /= 255;
+        a1 /= 255;
+        r0 /= 255;
+        g0 /= 255;
+        b0 /= 255;
+        a0 /= 255;
+        Uint8 a01 = (1 - a0) * a1 + a0;
+        r = ((1 - a0) * a1 * r1 + a0 * r0) / a01 * 255;
+        g = ((1 - a0) * a1 * g1 + a0 * g0) / a01 * 255;
+        b = ((1 - a0) * a1 * b1 + a0 * b0) / a01 * 255;
+        a = a01 * 255;
+        l = l->next;
+    }
+    return SDL_MapRGBA(lay->img->format, r, g, b, a);
+}
+
+
+SDL_Surface *compress_frame(int i, int keep_bg)
 {
     if (i == -1)
         i = sdl_data.curframe;
     Frame *f = get_frame(i);
-    Layer *l = f->layer->next;
-    while (l != NULL)
-    {
-        for (int i = 0; i < sdl_data.width; i++)
-        {
-            for (int j = 0; j < sdl_data.height; j++)
-            {
-                Uint32 pixel = get_pixel(l->img, i, j);
-                put_pixel(f->img, i , j, pixel);
-            }
-        }
+    Layer *l = f->layer;
+    if (keep_bg == 0)
         l = l->next;
+    SDL_FillRect(f->img, NULL, 0x00000000);
+    for (int i = 0; i < sdl_data.width; i++)
+    {
+        for (int j = 0; j < sdl_data.height; j++)
+        {
+            Uint32 pixel = compress_pixel(l, i, j);
+            if (pixel != 0)
+                put_pixel(f->img, i , j, pixel);
+        }
     }
     return f->img;
 }
@@ -198,7 +238,7 @@ void import_img(char *file)
 
 void export_current_frame(char *filename)
 {
-    SDL_Surface *c = compress_frame(sdl_data.curframe);
+    SDL_Surface *c = compress_frame(sdl_data.curframe, 0);
     SDL_SaveBMP(c, filename);
     //SDL_SaveBMP(sdl_data.current->img, filename);
 }
@@ -241,6 +281,16 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y, GdkRGBA* color)
                     x * sdl_data.width / (win_x - win_x % sdl_data.width),
                     y * sdl_data.width / (win_x - win_x % sdl_data.width),
                     pixel);
+
+            Uint8 r, g, b, a;
+            Uint32 pixel = compress_pixel(get_frame(sdl_data.curframe)->layer,
+                    x * sdl_data.width / (win_x - win_x % sdl_data.width),
+                    y * sdl_data.width / (win_x - win_x % sdl_data.width));
+            SDL_GetRGBA(pixel, sdl_data.current->img->format, &r, &g, &b, &a);
+            color->red = (double) r / 255;
+            color->green = (double) g / 255;
+            color->blue = (double) b / 255;
+            color->alpha = (double) a / 255;
             return rect;
         }
     }
@@ -258,6 +308,15 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y, GdkRGBA* color)
                     x * sdl_data.height / (win_y - win_y % sdl_data.height),
                     y * sdl_data.height / (win_y - win_y % sdl_data.height),
                     pixel);
+            Uint8 r, g, b, a;
+            Uint32 pixel = compress_pixel(get_frame(sdl_data.curframe)->layer,
+                    x * sdl_data.height / (win_y - win_y % sdl_data.width),
+                    y * sdl_data.height / (win_y - win_y % sdl_data.width));
+            SDL_GetRGBA(pixel, sdl_data.current->img->format, &r, &g, &b, &a);
+            color->red = (double) r / 255;
+            color->green = (double) g / 255;
+            color->blue = (double) b / 255;
+            color->alpha = (double) a / 255;
             return rect;
         }
     }
@@ -555,7 +614,7 @@ void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* co
         }
     }
     // redraws surface
-    SDL_Surface *tmp = compress_frame(-1);
+    SDL_Surface *tmp = compress_frame(-1, 1);
 }
 
 void circle(int x, int y, int r)
@@ -589,16 +648,18 @@ void main_sdl(int width, int height)
     sdl_data.nbframe = 1;
     sdl_data.curlayer = 0;
     sdl_data.curframe = 0;
-    circle(10,10,5);
+    //circle(10,10,5);
     // import given file
     // draw given file
     //put_pixel(sdl_data.current->img, 0, 0, SDL_MapRGBA(sdl_data.current->img->format, 100, 100, 100, 255));
     //printf("%lu hi\n", sdl_data.current->img);
     //printf("hi\n");
     // display
-    /*sdl_init();
-      SDL_Surface* screen_surface = display_image(sdl_data.current->img);
-      SDL_FreeSurface(screen_surface);*/
+    //init_sdl();
+    //SDL_Surface* screen_surface = display_image(sdl_data.current->img);
+    //wait_for_keypressed();
+    //SDL_FreeSurface(screen_surface);
+
 }
 
 void main_sdl_import(char *filename)

@@ -3,16 +3,67 @@
 #include "img_layer.h"
 #include <err.h>
 #include <stdlib.h>
-
+#include <gtk/gtk.h>
+static void create_background(SDL_Surface *s)
+{
+    SDL_Rect rect;
+    rect.w = 16;
+    rect.h = 16;
+    Uint32 p1 = SDL_MapRGBA(s->format, 0x80, 0x80, 0x80, 0xff);
+    Uint32 p2 = SDL_MapRGBA(s->format, 0xc0, 0xc0, 0xc0, 0xff);
+    for (rect.x = 0; rect.x < s->w; rect.x += 16)
+    {
+        if (s->w < rect.x + 16)
+            rect.w = s->w - rect.x;
+        for (rect. y = 0; rect.y < s->h; rect.y += 16)
+        {
+            if (s->h < rect.y + 16)
+                rect.h = s->h - rect.y;
+            if ((rect.x / 16 + rect.y / 16) % 2 == 0)
+                SDL_FillRect(s, &rect, p1);
+            else
+                SDL_FillRect(s, &rect, p2);
+        }
+        rect.h = 16;
+    }
+}
 
 // Creates a sentinel for linked list layer
 Layer* init_layer(int w, int h)
 {
+    static SDL_Surface *bg = NULL;
+    if (bg == NULL)
+    {
+        Uint32 rmask, gmask, bmask, amask;
+
+        /* SDL interprets each pixel as a 32-bit number, so our masks must depend
+           on the endianness (byte order) of the machine */
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+        rmask = 0xff000000;
+        gmask = 0x00ff0000;
+        bmask = 0x0000ff00;
+        amask = 0x000000ff;
+#else
+        rmask = 0x000000ff;
+        gmask = 0x0000ff00;
+        bmask = 0x00ff0000;
+        amask = 0xff000000;
+#endif
+
+        bg = SDL_CreateRGBSurface(0, w, h, 32,
+                rmask, gmask, bmask, amask);
+        if (bg == NULL) {
+            errx(1, "SDL_CreateRGBSurface() failed");
+        }
+
+        create_background(bg);
+    }
+
     Layer *sentinel = malloc(sizeof(Layer));
     sentinel->prev = NULL;
     sentinel->next = NULL;
     sentinel->index = -1;
-    sentinel->img = NULL;
+    sentinel->img = bg;
     
     add_layer(sentinel, w, h);
 
@@ -53,7 +104,7 @@ void add_layer(Layer *list, int w, int h)
     if (new->img == NULL) {
         errx(1, "SDL_CreateRGBSurface() failed");
     }
-    SDL_FillRect(new->img, NULL, 0xffffffff);
+    SDL_FillRect(new->img, NULL, 0x00000000);
 }
 
 // Remove the i-th layer from the list
