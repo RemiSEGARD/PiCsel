@@ -31,6 +31,19 @@ static void clear_surface (void)
     cairo_destroy (cr);
 }
 
+void draw_background()
+{
+    cairo_t *cr;
+
+    cr = cairo_create (surface);
+
+    cairo_set_source_rgb (cr, 0.94901, 0.94509, 0.94117);
+    cairo_paint (cr);
+
+    cairo_destroy (cr);
+
+}
+
 /* Create a new surface of the appropriate size to store our scribbles */
 static gboolean configure_event_cb (GtkWidget *widget, 
         GdkEventConfigure *event, gpointer data)
@@ -46,7 +59,7 @@ static gboolean configure_event_cb (GtkWidget *widget,
             gtk_widget_get_allocated_height (widget));
     
     /* Initialize the surface to white */
-    clear_surface ();
+    draw_background();
 
     return TRUE;
 }
@@ -94,6 +107,15 @@ static void draw_brush (GtkWidget *widget, gdouble x, gdouble y, GdkRGBA* color)
             rect.width, rect.height);
 }
 
+/*
+draw_cirlce_release(GtkDrawingArea)
+{
+    circle()
+    compress-frame(-1, 1)
+    redraw_surface()
+
+}
+*/
 
 /* Draw a rectangle on the surface at the given position of an image */
 static void draw_pixel (GtkWidget *widget, int x, int y, SDL_Surface *s)
@@ -178,13 +200,55 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
     return TRUE;
 }
 
-void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surface)
+void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surf)
 {
-    for (int i = 0; i < surface->w; i++)
+    cairo_t *cr;
+    
+    /* Paint to the surface, where we store our state */
+    cr = cairo_create (surface);
+    
+    GdkRectangle rect; 
+    int w = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
+    int h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
+    int pixel_size;
+    if (w < h)
+        pixel_size = w / surf->w;
+    else
+        pixel_size = h / surf->h;
+    rect.x = surf->w * pixel_size;
+    rect.y = 0;
+    rect.width = 3;
+    rect.height = surf->h * pixel_size + 3;
+    
+    cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
+    
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_fill (cr);
+    cairo_destroy (cr);
+    gtk_widget_queue_draw_area ((GtkWidget *)drawing_area, rect.x, rect.y, 
+            rect.width, rect.height);
+    
+    /* Paint to the surface, where we store our state */
+    cr = cairo_create (surface);
+    
+    rect.x = 0;
+    rect.y = surf->h * pixel_size;
+    rect.width = surf->w * pixel_size;
+    rect.height = 3;
+    
+    cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
+    
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_fill (cr);
+    cairo_destroy (cr);
+    
+    gtk_widget_queue_draw_area((GtkWidget *)drawing_area, rect.x, rect.y, 
+            rect.width, rect.height);
+    for (int i = 0; i < surf->w; i++)
     {
-        for (int j = 0; j < surface->h; j++)
+        for (int j = 0; j < surf->h; j++)
         {
-            draw_pixel((GtkWidget *)drawing_area, i , j, surface);
+            draw_pixel((GtkWidget *)drawing_area, i , j, surf);
         }
     }
 }

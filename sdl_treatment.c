@@ -21,8 +21,8 @@ void prev_frame()
 {
     if(sdl_data.curframe != 0)
     {
-        sdl_data.curframe--;
         select_layer(sdl_data.curframe-1, sdl_data.curlayer);
+        sdl_data.curframe--;
     }
 }
 
@@ -30,8 +30,8 @@ void next_frame()
 {
     if(sdl_data.curframe < sdl_data.nbframe - 1)
     {
-        sdl_data.curframe++;
         select_layer(sdl_data.curframe+1, sdl_data.curlayer);
+        sdl_data.curframe++;
     }
 }
 
@@ -216,8 +216,10 @@ SDL_Surface *compress_frame(int i, int keep_bg)
         i = sdl_data.curframe;
     Frame *f = get_frame(i);
     Layer *l = f->layer;
+    g_print("hi ");
     if (keep_bg == 0)
         l = l->next;
+    g_print("there");
     SDL_FillRect(f->img, NULL, 0x00000000);
     for (int i = 0; i < sdl_data.width; i++)
     {
@@ -510,7 +512,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
     // Just in case x1 == x2 and y1 == y2
     put_pixel(sdl_data.current->img,x1,y1,pixel);
     // Redraws sruface
-    compress_frame(-1);
+    compress_frame(-1 ,1);
 }
 
 void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color)
@@ -616,11 +618,7 @@ void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* co
         }
     }
     // redraws surface
-<<<<<<< HEAD
     SDL_Surface *tmp = compress_frame(-1, 1);
-=======
-    compress_frame(-1);
->>>>>>> 4fb72c456931a2ac458084f3965793ed30a15224
 }
 
 void circle(int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
@@ -690,7 +688,7 @@ void circle(int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
     }
 
     // Redraws surface
-    compress_frame(-1);
+    compress_frame(-1, 1);
 }
 
 void main_sdl(int width, int height)
