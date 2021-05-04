@@ -509,6 +509,8 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
     }
     // Just in case x1 == x2 and y1 == y2
     put_pixel(sdl_data.current->img,x1,y1,pixel);
+    // Redraws sruface
+    compress_frame(-1);
 }
 
 void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color)
@@ -614,24 +616,81 @@ void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* co
         }
     }
     // redraws surface
+<<<<<<< HEAD
     SDL_Surface *tmp = compress_frame(-1, 1);
+=======
+    compress_frame(-1);
+>>>>>>> 4fb72c456931a2ac458084f3965793ed30a15224
 }
 
-void circle(int x, int y, int r)
+void circle(int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
 {
-    // TODO
-    // draws a circle with center coordinates of (x,y) and od radius r
-    static const double PI = 3.1415926535;
-    double i, angle, x1, y1;
-    for (i = 0; i < 360; i += 0.1)
+    // draws a circle "between" the coordonates (x1,y1) and (x2,y2)
+
+    // Calculate the new coordinates
+    if (win_x < win_y)
     {
-        angle = i;
-        x1 = r * cos(angle * PI / 180);
-        y1 = r * sin(angle * PI / 180);
-        //Uint32 p = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
-        Uint32 p = SDL_MapRGB(sdl_data.current->img->format, 50, 50, 50);
-        put_pixel(sdl_data.current->img, x + x1, y + y1, p);
+        x1 = x1 * sdl_data.width / (win_x - win_x % sdl_data.width);
+        y1 = y1 * sdl_data.width / (win_x - win_x % sdl_data.width);
+        x2 = x2 * sdl_data.width / (win_x - win_x % sdl_data.width);
+        y2 = y2 * sdl_data.width / (win_x - win_x % sdl_data.width);
     }
+    else
+    {
+        x1 = x1 * sdl_data.height / (win_y - win_y % sdl_data.height);
+        y1 = y1 * sdl_data.height / (win_y - win_y % sdl_data.height);
+        x2 = x2 * sdl_data.height / (win_y - win_y % sdl_data.height);
+        y2 = y2 * sdl_data.height / (win_y - win_y % sdl_data.height);
+    }
+    // Convert GdkRGBA color to a value usable by SDL
+    Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
+
+    // Calculate the radius and center of the circle
+    // TODO
+    int center_x = x1+y1/2;
+    int center_y = x2+y2/2;
+    // highest x coordinate
+    int r = x2 / 2;;
+
+    // Bresenham
+    int x = 0;
+    int y = r;
+    int d = 3 - 2 * r;
+
+    // Draws to the 8 point of the circle
+    put_pixel(sdl_data.current->img,center_x+x,center_y+y,pixel);
+    put_pixel(sdl_data.current->img,center_x+y,center_y+x,pixel);
+    put_pixel(sdl_data.current->img,center_x-y,center_y+x,pixel);
+    put_pixel(sdl_data.current->img,center_x-x,center_y+y,pixel);
+    put_pixel(sdl_data.current->img,center_x-x,center_y-y,pixel);
+    put_pixel(sdl_data.current->img,center_x+y,center_y-x,pixel);
+    put_pixel(sdl_data.current->img,center_x+x,center_y-y,pixel);
+    put_pixel(sdl_data.current->img,center_x-y,center_y-x,pixel);
+
+
+    while(y>=x)
+    {
+        x++;
+        if (d>0)
+        {
+            y--;
+            d = d+4*(x-y)+10;
+        }
+        else
+            d = d + 4 * x + 6;
+
+        put_pixel(sdl_data.current->img,center_x+x,center_y+y,pixel);
+        put_pixel(sdl_data.current->img,center_x+y,center_y+x,pixel);
+        put_pixel(sdl_data.current->img,center_x-y,center_y+x,pixel);
+        put_pixel(sdl_data.current->img,center_x-x,center_y+y,pixel);
+        put_pixel(sdl_data.current->img,center_x-x,center_y-y,pixel);
+        put_pixel(sdl_data.current->img,center_x+y,center_y-x,pixel);
+        put_pixel(sdl_data.current->img,center_x+x,center_y-y,pixel);
+        put_pixel(sdl_data.current->img,center_x-y,center_y-x,pixel);
+    }
+
+    // Redraws surface
+    compress_frame(-1);
 }
 
 void main_sdl(int width, int height)
