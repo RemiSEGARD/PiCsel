@@ -72,6 +72,19 @@ void on_export(GtkMenuItem *item, gpointer data)
 }
 
 
+void open_dialog(gpointer window)
+//static void open_dialog(GtkWidget* button, gpointer window)
+{
+	GtkWidget *dialog;
+	dialog = gtk_file_chooser_dialog_new("Choose a file", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
+	gtk_widget_show_all(dialog);
+	gint resp = gtk_dialog_run(GTK_DIALOG(dialog));
+	if(resp == GTK_RESPONSE_OK)
+		g_print("%s\n", gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog)));
+	gtk_widget_destroy(dialog);
+}
+
+
 int main_ui(int x, int y, char *filename)
 {
     // Initilizes GTK
@@ -107,6 +120,8 @@ int main_ui(int x, int y, char *filename)
     GtkButton* next_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_layer"));
     GtkButton* new_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_layer"));
 
+    GtkImageMenuItem* open_item = GTK_MENU_ITEM(gtk_builder_get_object(builder, "open-item"));
+
     if (x != 0)
         main_sdl(x, y);
     else
@@ -141,9 +156,15 @@ int main_ui(int x, int y, char *filename)
     h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
 
     g_signal_connect(drawing_area, "draw", G_CALLBACK(on_drawingarea_draw), NULL);
+
+    //connects the menu items
+    g_signal_connect(open_item, "activate", G_CALLBACK(open_dialog), NULL);
+
+
+    //open_dialog(window);
+    
     // Runs the main loop
     gtk_main();
-
 
     return 0;
 }
