@@ -197,8 +197,9 @@ static gboolean button_release_event_cb (GtkWidget *widget,
     GdkRGBA* color = malloc(sizeof(GdkRGBA));
     gtk_color_chooser_get_rgba(data,color);
     
-    //rectangle(x1, y1, event->x, event->y, w, h, color);
+    rectangle(x1, y1, event->x, event->y, w, h, color);
     //line(x1,y1,event->x,event->y,w,h,color);
+    //circle(x1,y1,event->x,event->y,w,h,color)
     free(color);
     return TRUE;
 }
