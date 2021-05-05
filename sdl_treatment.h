@@ -28,7 +28,7 @@ void new_layer();
 
 Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y);
 
-void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel);
+void put_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
 
 SDL_Surface *compress_frame(int i, int keep_bg);
 

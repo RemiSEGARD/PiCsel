@@ -136,10 +136,13 @@ Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y)
     return 0;
 }
 
-void put_pixel(SDL_Surface *surface, unsigned x, unsigned y, Uint32 pixel)
+void put_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
     // Function from epita prog S3 site
     Uint8 *p = pixel_ref(surface, x, y);
+
+    if (x < 0 || y < 0 || x >= surface->w || y >= surface->h)
+        return;
 
     switch(surface->format->BytesPerPixel)
     {
@@ -765,11 +768,9 @@ GdkRGBA* eyedropper(int x, int y, int win_x, int win_y)
         y = y * sdl_data.height / (win_y - win_y % sdl_data.height);
     }
     Uint32 p = get_pixel(sdl_data.current->img,x,y);
-    g_print("%d %d\n",win_x,win_y);
     Uint8 r,g,b,a;
     SDL_GetRGBA(p, sdl_data.current->img->format, &r, &g, &b, &a);
     GdkRGBA* color = malloc(sizeof(GdkRGBA));
-    g_print("r = %d\n",r);
     double red = (double) r;
     double green = (double) g;
     double blue = (double) b;
