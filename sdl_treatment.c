@@ -394,12 +394,13 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
     // Convert GdkRGBA color to a value usable by SDL
     Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
     // Draws the line
+    /*
     // in case of straight vertical lines
     if (x1 == x2)
     {
         if (y1>y2)
         {
-            while (y1>=y2)
+            while (y1>y2)
             {
                 put_pixel(sdl_data.current->img,x1,y1,pixel);
                 y1--;
@@ -420,7 +421,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
     {
         if (x1>x2)
         {
-            while (x1>=x2)
+            while (x1>x2)
             {
                 put_pixel(sdl_data.current->img,x1,y1,pixel);
                 x1--;
@@ -435,8 +436,8 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
             }
         }
         return;
-    }
-
+    }*/
+    
     /*
     // Swaps if necessary
     if (x1 > x2)
@@ -452,6 +453,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
         y2 = tmp;
     }*/
     
+
     double x, y, dx, dy, step;
     dx = (float)(x2 - x1);
     dy = (float)(y2 - y1);
@@ -463,8 +465,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
     dy = dy / step;
     x = x1;
     y = y1;
-    g_print("%f %f", dx, dy);
-    int i = 0;
+    int i = 1;
     while (i <= step)
     {
         put_pixel(sdl_data.current->img, (int)x, (int)y, pixel);
@@ -485,6 +486,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
 /*
     int dx, dy, p, x, y;
     // Swap in case x1>x2 and y1>y2
+    
     if (x1 > x2 && y1 > y2)
     {
         int tmp = x1;

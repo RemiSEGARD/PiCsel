@@ -19,7 +19,7 @@ typedef enum Tools
 static cairo_surface_t *surface = NULL;
 
 // State Variables
-Tools tool = LINE;
+Tools tool = DRAW;
 gdouble x1,y1;
 
 /* Sets the whole surface to white */
