@@ -44,6 +44,8 @@ void line(int x1, int y1, int x2, int y2,int win_x, int win_y, GdkRGBA* color);
 
 void circle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color);
 
+GdkRGBA *eyedropper(int x, int y, int win_x, int win_y);
+
 void main_sdl(int width, int height);
 
 void main_sdl_import(char *filename);

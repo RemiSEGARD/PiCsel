@@ -258,7 +258,8 @@ static gboolean button_press_event_cb (GtkWidget *widget,
     }
     else if (event->button == GDK_BUTTON_SECONDARY)
     {
-        clear_surface ();
+        GdkRGBA *p = eyedropper(event->x,event->y,gtk_widget_get_allocated_width(widget),gtk_widget_get_allocated_height(widget));
+        gtk_color_chooser_set_rgba(data,p);
         gtk_widget_queue_draw (widget);
     }
 

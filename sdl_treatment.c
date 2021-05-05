@@ -11,7 +11,7 @@
 
 void select_layer(int frame, int layer);
 
-void fill_sdl(int x, int y, GdkRGBA* color, Uint8 match_r, Uint8 match_g,Uint8 match_b,Uint8 match_a);
+void fill_sdl(int x, int y, GdkRGBA* color, Uint32 match);
 
 struct SDL_data sdl_data;
 
@@ -341,15 +341,12 @@ void fill(int x, int y, int win_x, int win_y, GdkRGBA* color)
         x = x * sdl_data.height / (win_y - win_y % sdl_data.height);
         y = y * sdl_data.height / (win_y - win_y % sdl_data.height);
     }
-    Uint8 r,g,b,a;
     // gets the color that we want to replace by GdkRGBA* color
     Uint32 pixel = get_pixel(sdl_data.current->img, x, y);
-    SDL_GetRGBA(pixel, sdl_data.current->img->format, &r, &g, &b, &a);
-    g_print("%d\n",r);
-    fill_sdl(x,y,color,r,g,b,a);
+    fill_sdl(x,y,color,pixel);
 }
 
-void fill_sdl(int x, int y, GdkRGBA* color, Uint8 match_r, Uint8 match_g,Uint8 match_b,Uint8 match_a)
+void fill_sdl(int x, int y, GdkRGBA* color, Uint32 match)
 {
     // Fills on the SDL_Surface
     // match_r, match_g, match_b, match_a represent the rgba values needed to match the color
@@ -359,17 +356,20 @@ void fill_sdl(int x, int y, GdkRGBA* color, Uint8 match_r, Uint8 match_g,Uint8 m
     Uint32 pixel = get_pixel(sdl_data.current->img, x, y);
     SDL_GetRGBA(pixel, sdl_data.current->img->format, &r, &g, &b, &a);
     
+    if (r == color->red*255 && g == color->green*255 && b == color->blue*255 && a == color->alpha*255)
+        return;
+
     // condition needs to be changed to detect the proper pixel now it only detects white pixels
-    if (r == 255 && g == 255 && b == 255)
+    if (match == pixel)
     {
         // converts the color from GdkRGBA to a value from 0 to 255
         Uint32 p = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
         put_pixel(sdl_data.current->img, x, y, p);
         // launches all the recursive function to draw the pixels around current pixel
-        fill_sdl(x+1,y,color,match_r,match_g,match_b,match_a);
-        fill_sdl(x-1,y,color,match_r,match_g,match_b,match_a);
-        fill_sdl(x,y+1,color,match_r,match_g,match_b,match_a);
-        fill_sdl(x,y-1,color,match_r,match_g,match_b,match_a);
+        fill_sdl(x+1,y,color,match);
+        fill_sdl(x-1,y,color,match);
+        fill_sdl(x,y+1,color,match);
+        fill_sdl(x,y-1,color,match);
     }
 }
 
@@ -556,8 +556,6 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
     }
     // Just in case x1 == x2 and y1 == y2
     put_pixel(sdl_data.current->img,x1,y1,pixel);
-    // Redraws sruface
-    compress_frame(-1 ,1);
 */
 }
 
@@ -663,8 +661,6 @@ void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* co
             put_pixel(sdl_data.current->img, x1 - w, y1 + i, pixel);
         }
     }
-    // redraws surface
-    SDL_Surface *tmp = compress_frame(-1, 1);
 }
 
 void circle(int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
@@ -690,11 +686,30 @@ void circle(int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
     Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
 
     // Calculate the radius and center of the circle
-    // TODO
-    int center_x = x1+y1/2;
-    int center_y = x2+y2/2;
+    
+    if (x1 > x2 && y1 > y2)
+    {
+        int tmp = x1;
+        x1 = x2;
+        x2 = tmp;
+        tmp = y1;
+        y1 = y2;
+        y2 = tmp;
+    }
+    if(x1>x2 && y1<y2)
+    {
+        int tmp = x1;
+        x1 = x2;
+        x2 = tmp;
+        tmp = y1;
+        y1 = y2;
+        y2 = tmp;
+    }
+
+    int center_x = (x1+x2)/2;
+    int center_y = (y1+y2)/2;
     // highest x coordinate
-    int r = x2 / 2;;
+    int r = x2 - center_x;
 
     // Bresenham
     int x = 0;
@@ -733,8 +748,35 @@ void circle(int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
         put_pixel(sdl_data.current->img,center_x-y,center_y-x,pixel);
     }
 
-    // Redraws surface
-    compress_frame(-1, 1);
+}
+
+GdkRGBA* eyedropper(int x, int y, int win_x, int win_y)
+{
+    if (win_x < win_y)
+    {
+        x = x * sdl_data.width / (win_x - win_x % sdl_data.width);
+        y = y * sdl_data.width / (win_x - win_x % sdl_data.width);
+    }
+    else
+    {
+        x = x * sdl_data.height / (win_y - win_y % sdl_data.height);
+        y = y * sdl_data.height / (win_y - win_y % sdl_data.height);
+    }
+    Uint32 p = get_pixel(sdl_data.current->img,x,y);
+    g_print("%d %d\n",win_x,win_y);
+    Uint8 r,g,b,a;
+    SDL_GetRGBA(p, sdl_data.current->img->format, &r, &g, &b, &a);
+    GdkRGBA* color = malloc(sizeof(GdkRGBA));
+    g_print("r = %d\n",r);
+    double red = (double) r;
+    double green = (double) g;
+    double blue = (double) b;
+    double alpha = (double) a;
+    color->red = red / 255;
+    color->green = green / 255;
+    color->blue = blue / 255;
+    color->alpha = alpha / 255;
+    return color;
 }
 
 void main_sdl(int width, int height)
