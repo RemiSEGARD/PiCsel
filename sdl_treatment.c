@@ -468,7 +468,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
     dy = dy / step;
     x = x1;
     y = y1;
-    int i = 1;
+    int i = 0;
     while (i <= step)
     {
         put_pixel(sdl_data.current->img, (int)x, (int)y, pixel);

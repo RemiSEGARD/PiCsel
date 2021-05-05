@@ -321,6 +321,8 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
                 color->green = 0;
                 color->alpha = 0;
                 line(x1 ,y1 , event->x, event->y, w, h,color);
+                x1 = event->x;
+                y1 = event->y;
                 s = compress_frame(-1, 1);
                 redraw_surface((GtkDrawingArea *)widget, s);
                 break;
