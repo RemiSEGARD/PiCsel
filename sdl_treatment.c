@@ -21,8 +21,8 @@ void prev_frame()
 {
     if(sdl_data.curframe != 0)
     {
+        // no need to change curframe, select_layer does it
         select_layer(sdl_data.curframe-1, sdl_data.curlayer);
-        sdl_data.curframe--;
     }
 }
 
@@ -30,8 +30,8 @@ void next_frame()
 {
     if(sdl_data.curframe < sdl_data.nbframe - 1)
     {
+        // no need to change curframe, select_layer does it
         select_layer(sdl_data.curframe+1, sdl_data.curlayer);
-        sdl_data.curframe++;
     }
 }
 
@@ -216,10 +216,8 @@ SDL_Surface *compress_frame(int i, int keep_bg)
         i = sdl_data.curframe;
     Frame *f = get_frame(i);
     Layer *l = f->layer;
-    g_print("hi ");
     if (keep_bg == 0)
         l = l->next;
-    g_print("there");
     SDL_FillRect(f->img, NULL, 0x00000000);
     for (int i = 0; i < sdl_data.width; i++)
     {
@@ -401,7 +399,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
     {
         if (y1>y2)
         {
-            while (y1>y2)
+            while (y1>=y2)
             {
                 put_pixel(sdl_data.current->img,x1,y1,pixel);
                 y1--;
@@ -409,7 +407,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
         }
         if (y1<y2)
         {
-            while (y1<y2)
+            while (y1<=y2)
             {
                 put_pixel(sdl_data.current->img,x1,y1,pixel);
                 y1++;
@@ -422,7 +420,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
     {
         if (x1>x2)
         {
-            while (x1>x2)
+            while (x1>=x2)
             {
                 put_pixel(sdl_data.current->img,x1,y1,pixel);
                 x1--;
@@ -430,7 +428,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
         }
         if (x1<x2)
         {
-            while (x1<x2)
+            while (x1<=x2)
             {
                 put_pixel(sdl_data.current->img,x1,y1,pixel);
                 x1++;
@@ -438,6 +436,53 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
         }
         return;
     }
+
+    /*
+    // Swaps if necessary
+    if (x1 > x2)
+    {
+        int tmp = x1;
+        x1 = x2;
+        x2 = tmp;
+    }
+    if (y1 > y2)
+    {
+        int tmp = y1;
+        y1 = y2;
+        y2 = tmp;
+    }*/
+    
+    double x, y, dx, dy, step;
+    dx = (float)(x2 - x1);
+    dy = (float)(y2 - y1);
+    if (fabs(dx) > fabs(dy))
+        step = fabs(dx);
+    else
+        step = fabs(dy);
+    dx = dx / step;
+    dy = dy / step;
+    x = x1;
+    y = y1;
+    g_print("%f %f", dx, dy);
+    int i = 0;
+    while (i <= step)
+    {
+        put_pixel(sdl_data.current->img, (int)x, (int)y, pixel);
+        x += dx;
+        y += dy;
+        i = i + 1;
+    }
+/*
+    double coef = (double)(y2 - y1) / (double)(x2 - x1);
+    double b = y1 - coef * x1;
+
+    for (int i = x1; i <= x2; i++)
+    {
+        put_pixel(sdl_data.current->img, i, (int)(i * coef + b), pixel);
+    }
+*/
+
+/*
     int dx, dy, p, x, y;
     // Swap in case x1>x2 and y1>y2
     if (x1 > x2 && y1 > y2)
@@ -513,6 +558,7 @@ void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
     put_pixel(sdl_data.current->img,x1,y1,pixel);
     // Redraws sruface
     compress_frame(-1 ,1);
+*/
 }
 
 void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color)

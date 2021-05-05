@@ -4,18 +4,22 @@
 #include "SDL.h"
 #include "sdl_treatment.h"
 
-/*typedef enum State
+typedef enum Tools
 {
-    DRAW;
-    LINE;
-    RECTANGLE;
-    CIRCLE;
-    FILL;
-} State;
-*/
+    DRAW,
+    ERASER,
+    LINE,
+    RECTANGLE,
+    CIRCLE,
+    FILL,
+} Tools;
+
+
 /* Surface to store current scribbles */
 static cairo_surface_t *surface = NULL;
 
+// State Variables
+Tools tool = LINE;
 gdouble x1,y1;
 
 /* Sets the whole surface to white */
@@ -158,47 +162,7 @@ static void draw_pixel (GtkWidget *widget, int x, int y, SDL_Surface *s)
             rect.width, rect.height);
 }
 
-/* Handle the different types of button pressed */
-static gboolean button_press_event_cb (GtkWidget *widget,
-        GdkEventButton *event, gpointer data)
-{
-    (void) data;
-    if (surface == NULL)
-        return FALSE;
 
-    if (event->button == GDK_BUTTON_PRIMARY)
-    {
-        x1 = event->x;
-        y1 = event->y;
-        GdkRGBA* color = malloc(sizeof(GdkRGBA));
-        gtk_color_chooser_get_rgba(data,color);
-        draw_brush (widget, event->x, event->y, color);
-        free(color);
-    }
-    else if (event->button == GDK_BUTTON_SECONDARY)
-    {
-        clear_surface ();
-        gtk_widget_queue_draw (widget);
-    }
-
-    return TRUE;
-}
-
-/* Handle the held mouse button 1 event */
-static gboolean motion_notify_event_cb (GtkWidget *widget,
-        GdkEventMotion *event, gpointer data)
-{
-    (void) data;
-    if (surface == NULL)
-        return FALSE;
-
-    GdkRGBA* color = malloc(sizeof(GdkRGBA));
-    gtk_color_chooser_get_rgba(data,color);
-    if (event->state & GDK_BUTTON1_MASK)
-        draw_brush (widget, event->x, event->y,color);
-    free(color);
-    return TRUE;
-}
 
 void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surf)
 {
@@ -254,6 +218,93 @@ void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surf)
 }
 
 
+
+/* Handle the different types of button pressed */
+static gboolean button_press_event_cb (GtkWidget *widget,
+        GdkEventButton *event, gpointer data)
+{
+    if (surface == NULL)
+        return FALSE;
+
+    if (event->button == GDK_BUTTON_PRIMARY)
+    {
+        x1 = event->x;
+        y1 = event->y;
+        GdkRGBA* color = malloc(sizeof(GdkRGBA));
+        gtk_color_chooser_get_rgba(data,color);
+        switch(tool)
+        {
+            case DRAW:
+                draw_brush (widget, event->x, event->y, color);
+                break;
+            case ERASER:
+                color->red = 0;
+                color->blue = 0;
+                color->green = 0;
+                color->alpha = 0;
+                draw_brush (widget, event->x, event->y, color);
+                break;
+            case FILL:
+                fill(event->x, event->y,
+                        gtk_widget_get_allocated_width(widget),
+                        gtk_widget_get_allocated_height(widget), color);
+                SDL_Surface *s = compress_frame(-1, 1);
+                redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            default:
+                break;
+        }
+        free(color);
+    }
+    else if (event->button == GDK_BUTTON_SECONDARY)
+    {
+        clear_surface ();
+        gtk_widget_queue_draw (widget);
+    }
+
+    return TRUE;
+}
+
+/* Handle the held mouse button 1 event */
+static gboolean motion_notify_event_cb (GtkWidget *widget,
+        GdkEventMotion *event, gpointer data)
+{
+    (void) data;
+    if (surface == NULL)
+        return FALSE;
+    int h = gtk_widget_get_allocated_height(widget);
+    int w = gtk_widget_get_allocated_width(widget);
+
+    GdkRGBA* color = malloc(sizeof(GdkRGBA));
+    gtk_color_chooser_get_rgba(data,color);
+    if (event->state & GDK_BUTTON1_MASK)
+    {
+        switch(tool)
+        {
+            case DRAW:
+                line(x1 ,y1 , event->x, event->y, w, h,color);
+                x1 = event->x;
+                y1 = event->y;
+                SDL_Surface *s = compress_frame(-1, 1);
+                redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            case ERASER:
+                color->red = 0;
+                color->blue = 0;
+                color->green = 0;
+                color->alpha = 0;
+                line(x1 ,y1 , event->x, event->y, w, h,color);
+                s = compress_frame(-1, 1);
+                redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            default:
+                break;
+        }
+    }
+    free(color);
+    return TRUE;
+}
+
 static gboolean button_release_event_cb (GtkWidget *widget,
         GdkEventMotion *event, gpointer data)
 {
@@ -261,9 +312,31 @@ static gboolean button_release_event_cb (GtkWidget *widget,
     int w = gtk_widget_get_allocated_width(widget);
     GdkRGBA* color = malloc(sizeof(GdkRGBA));
     gtk_color_chooser_get_rgba(data,color);
-    
-    rectangle(x1, y1, event->x, event->y, w, h, color);
-    //line(x1,y1,event->x,event->y,w,h,color);
+
+    if (event->state & GDK_BUTTON1_MASK)
+    {
+        switch(tool)
+        {
+            case LINE:
+                line(x1 ,y1 , event->x, event->y, w, h,color);
+                SDL_Surface *s = compress_frame(-1, 1);
+                redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            case RECTANGLE:
+                rectangle(x1, y1, event->x, event->y, w, h, color);
+                s = compress_frame(-1, 1);
+                redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            case CIRCLE :
+                circle(x1,y1,event->x,event->y,w,h,color);
+                s = compress_frame(-1, 1);
+                redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            default:
+                break;
+        }
+    }
+
     //circle(x1,y1,event->x,event->y,w,h,color)
     free(color);
     return TRUE;
