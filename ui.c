@@ -7,6 +7,14 @@
 
 GtkDrawingArea *darea;
 
+// signal for selecting tools 
+gint tpen = 1;
+gint teraser = 2;
+gint tfill = 3;
+gint tline = 4;
+gint trectangle = 5;
+gint tcircle = 6;
+
 void on_quit()
 {
     //free_all call = free liste de layers + les sdl surface
@@ -50,6 +58,36 @@ void on_new_layer()
 
 int w;
 int h;
+
+void select_pen()
+{
+    set_pen();
+}
+
+void select_eraser()
+{
+    set_eraser();
+}
+
+void select_fill()
+{
+    set_fill();
+}
+
+void select_line()
+{
+    set_line();
+}
+
+void select_rectangle()
+{
+    set_rectangle();
+}
+
+void select_circle()
+{
+    set_circle();
+}
 
 void on_drawingarea_draw(GtkWidget *widget, gpointer data)
 {
@@ -121,6 +159,15 @@ int main_ui(int x, int y, char *filename)
     GtkButton* next_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_layer"));
     GtkButton* new_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_layer"));
 
+    // button for slecting tools
+
+    GtkButton* pen_button = GTK_BUTTON(gtk_builder_get_object(builder, "pen"));
+    GtkButton* eraser_button = GTK_BUTTON(gtk_builder_get_object(builder, "eraser"));
+    GtkButton* fill_button = GTK_BUTTON(gtk_builder_get_object(builder, "fill"));
+    GtkButton* line_button = GTK_BUTTON(gtk_builder_get_object(builder, "line"));
+    GtkButton* rectangle_button = GTK_BUTTON(gtk_builder_get_object(builder, "rectangle"));
+    GtkButton* circle_button = GTK_BUTTON(gtk_builder_get_object(builder, "circle"));
+
     GtkMenuItem* export_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button"));
     GtkMenuItem* open_item = GTK_MENU_ITEM(gtk_builder_get_object(builder, "open-item"));
 
@@ -149,6 +196,15 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(prev_layer_button, "clicked", G_CALLBACK(on_prev_layer), NULL);
     g_signal_connect(next_layer_button, "clicked", G_CALLBACK(on_next_layer), NULL);
     g_signal_connect(new_layer_button, "clicked", G_CALLBACK(on_new_layer), NULL);
+
+
+
+    g_signal_connect(pen_button, "clicked", G_CALLBACK(select_pen), NULL);
+    g_signal_connect(eraser_button, "clicked", G_CALLBACK(select_eraser), NULL);
+    g_signal_connect(fill_button, "clicked", G_CALLBACK(select_fill), NULL);
+    g_signal_connect(line_button, "clicked", G_CALLBACK(select_line), NULL);
+    g_signal_connect(rectangle_button, "clicked", G_CALLBACK(select_rectangle), NULL);
+    g_signal_connect(circle_button, "clicked", G_CALLBACK(select_circle), NULL);
 
     //      Drawing signals
     setup_drawing(drawing_area, color_select);

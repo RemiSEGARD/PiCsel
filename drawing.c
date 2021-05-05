@@ -8,10 +8,10 @@ typedef enum Tools
 {
     DRAW,
     ERASER,
+    FILL,
     LINE,
     RECTANGLE,
     CIRCLE,
-    FILL,
 } Tools;
 
 
@@ -48,6 +48,32 @@ void draw_background()
 
 }
 
+void set_pen()
+{
+    tool = DRAW;
+}
+
+void set_eraser()
+{
+    tool = ERASER;
+}
+void set_fill()
+{
+    tool = FILL;
+}
+void set_line()
+{
+    tool = LINE;
+}
+void set_rectangle()
+{
+    tool = RECTANGLE;
+}
+
+void set_circle()
+{
+    tool = CIRCLE;
+}
 /* Create a new surface of the appropriate size to store our scribbles */
 static gboolean configure_event_cb (GtkWidget *widget, 
         GdkEventConfigure *event, gpointer data)
