@@ -118,6 +118,18 @@ char* open_dialog(gpointer window)
 	return (char*)res;
 }
 
+void on_import(gpointer window, GtkWidget *widget)
+{
+	char* impname = open_dialog(window);
+	if(impname)
+	{
+		main_sdl_import(impname);
+		SDL_Surface *surface = compress_frame(-1, 1);
+		redraw_surface(darea, surface);
+	}
+}
+
+
 void on_export(GtkMenuItem *item, gpointer window, gpointer data)
 {
     (void) item;
@@ -216,7 +228,7 @@ int main_ui(int x, int y, char *filename)
 
     //connects the menu items
     g_signal_connect(export_button, "activate", G_CALLBACK(on_export), NULL);
-    g_signal_connect(open_item, "activate", G_CALLBACK(open_dialog), window);
+    g_signal_connect(open_item, "activate", G_CALLBACK(on_import), window);
 
 
     //open_dialog(window);
