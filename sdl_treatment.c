@@ -722,14 +722,15 @@ void circle(int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
     int d = 3 - 2 * r;
 
     // Draws to the 8 point of the circle
-    put_pixel(sdl_data.current->img,center_x+x,center_y+y,pixel);
-    put_pixel(sdl_data.current->img,center_x+y,center_y+x,pixel);
-    put_pixel(sdl_data.current->img,center_x-y,center_y+x,pixel);
-    put_pixel(sdl_data.current->img,center_x-x,center_y+y,pixel);
-    put_pixel(sdl_data.current->img,center_x-x,center_y-y,pixel);
-    put_pixel(sdl_data.current->img,center_x+y,center_y-x,pixel);
-    put_pixel(sdl_data.current->img,center_x+x,center_y-y,pixel);
-    put_pixel(sdl_data.current->img,center_x-y,center_y-x,pixel);
+    if (x >= 0 || y >= 0 || y <= sdl_data.height || x <= sdl_data.width)
+        put_pixel(sdl_data.current->img, center_x + x, center_y + y, pixel);
+    put_pixel(sdl_data.current->img, center_x + y, center_y + x, pixel);
+    put_pixel(sdl_data.current->img, center_x - y, center_y + x, pixel);
+    put_pixel(sdl_data.current->img, center_x - x, center_y + y, pixel);
+    put_pixel(sdl_data.current->img, center_x - x, center_y - y, pixel);
+    put_pixel(sdl_data.current->img, center_x + y, center_y - x, pixel);
+    put_pixel(sdl_data.current->img, center_x + x, center_y - y, pixel);
+    put_pixel(sdl_data.current->img, center_x - y, center_y - x, pixel);
 
 
     while(y>=x)
@@ -743,15 +744,44 @@ void circle(int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
         else
             d = d + 4 * x + 6;
 
-        put_pixel(sdl_data.current->img,center_x+x,center_y+y,pixel);
-        put_pixel(sdl_data.current->img,center_x+y,center_y+x,pixel);
-        put_pixel(sdl_data.current->img,center_x-y,center_y+x,pixel);
-        put_pixel(sdl_data.current->img,center_x-x,center_y+y,pixel);
-        put_pixel(sdl_data.current->img,center_x-x,center_y-y,pixel);
-        put_pixel(sdl_data.current->img,center_x+y,center_y-x,pixel);
-        put_pixel(sdl_data.current->img,center_x+x,center_y-y,pixel);
-        put_pixel(sdl_data.current->img,center_x-y,center_y-x,pixel);
+        put_pixel(sdl_data.current->img, center_x + x, center_y + y, pixel);
+        put_pixel(sdl_data.current->img, center_x + y, center_y + x, pixel);
+        put_pixel(sdl_data.current->img, center_x - y, center_y + x, pixel);
+        put_pixel(sdl_data.current->img, center_x - x, center_y + y, pixel);
+        put_pixel(sdl_data.current->img, center_x - x, center_y - y, pixel);
+        put_pixel(sdl_data.current->img, center_x + y, center_y - x, pixel);
+        put_pixel(sdl_data.current->img, center_x + x, center_y - y, pixel);
+        put_pixel(sdl_data.current->img, center_x - y, center_y - x, pixel);
     }
+
+}
+
+
+SDL_Surface *previsualisation(void (*fun) (int, int, int, int, int, int, GdkRGBA *),
+        int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
+{
+    SDL_Surface *tmp = sdl_data.current->img;
+    sdl_data.current->img = sdl_data.previs;
+    SDL_FillRect(sdl_data.previs, NULL, 0x00000000);
+    fun(x1, y1, x2, y2, win_x, win_y, color);
+    sdl_data.current->img = tmp;
+    SDL_Surface *compressed = compress_frame(-1, 1);
+
+    for (int i = 0; i < sdl_data.width; i++)
+    {
+        for (int j = 0; j < sdl_data.height; j++)
+        {
+            Uint32 pixel = get_pixel(sdl_data.previs, i, j);
+            if (pixel != 0x00000000)
+            {
+                Uint8 r, g, b, a;
+                SDL_GetRGBA(pixel, sdl_data.previs->format, &r, &g, &b, &a);
+                pixel = SDL_MapRGBA(sdl_data.previs->format, r, g, b, 255);
+                put_pixel(compressed, i, j, pixel);
+            }
+        }
+    }
+    return compressed;
 
 }
 
@@ -767,6 +797,9 @@ GdkRGBA* eyedropper(int x, int y, int win_x, int win_y)
         x = x * sdl_data.height / (win_y - win_y % sdl_data.height);
         y = y * sdl_data.height / (win_y - win_y % sdl_data.height);
     }
+    if (x < 0 || y < 0 || y >= sdl_data.height || x >= sdl_data.width)
+        return NULL;
+
     Uint32 p = get_pixel(sdl_data.current->img,x,y);
     Uint8 r,g,b,a;
     SDL_GetRGBA(p, sdl_data.current->img->format, &r, &g, &b, &a);
@@ -796,6 +829,31 @@ void main_sdl(int width, int height)
     sdl_data.nbframe = 1;
     sdl_data.curlayer = 0;
     sdl_data.curframe = 0;
+
+    Uint32 rmask, gmask, bmask, amask;
+
+    /* SDL interprets each pixel as a 32-bit number, so our masks must depend
+       on the endianness (byte order) of the machine */
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    rmask = 0xff000000;
+    gmask = 0x00ff0000;
+    bmask = 0x0000ff00;
+    amask = 0x000000ff;
+#else
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+#endif
+
+    sdl_data.previs = SDL_CreateRGBSurface(0, width, height, 32,
+                                   rmask, gmask, bmask, amask);
+    if (sdl_data.previs == NULL) {
+        errx(1, "SDL_CreateRGBSurface() failed");
+    }
+    SDL_FillRect(sdl_data.previs, NULL, 0x00000000);
+
+
     //circle(10,10,5);
     // import given file
     // draw given file
@@ -827,7 +885,29 @@ void main_sdl_import(char *filename)
     sdl_data.nbframe = 1;
     sdl_data.curlayer = 0;
     sdl_data.curframe = 0;
+    
+    Uint32 rmask, gmask, bmask, amask;
 
+    /* SDL interprets each pixel as a 32-bit number, so our masks must depend
+       on the endianness (byte order) of the machine */
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    rmask = 0xff000000;
+    gmask = 0x00ff0000;
+    bmask = 0x0000ff00;
+    amask = 0x000000ff;
+#else
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+#endif
+
+    sdl_data.previs = SDL_CreateRGBSurface(0, import->w, import->h, 32,
+                                   rmask, gmask, bmask, amask);
+    if (sdl_data.previs == NULL) {
+        errx(1, "SDL_CreateRGBSurface() failed");
+    }
+    SDL_FillRect(sdl_data.previs, NULL, 0x00000000);
 
     // SDL_FreeSurface(screen_surface);
 }

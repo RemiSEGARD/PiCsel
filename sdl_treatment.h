@@ -13,6 +13,7 @@ typedef struct SDL_data
     int height;
     Frame *frames;
     Layer *current;
+    SDL_Surface *previs;
     int nblayer;
     int nbframe;
     int curframe;
@@ -45,6 +46,10 @@ void line(int x1, int y1, int x2, int y2,int win_x, int win_y, GdkRGBA* color);
 void circle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color);
 
 GdkRGBA *eyedropper(int x, int y, int win_x, int win_y);
+
+SDL_Surface *previsualisation(void (*fun) (int, int, int, int, int, int, GdkRGBA *),
+         int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color);
+
 
 void main_sdl(int width, int height);
 

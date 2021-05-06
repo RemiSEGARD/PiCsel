@@ -285,6 +285,8 @@ static gboolean button_press_event_cb (GtkWidget *widget,
     else if (event->button == GDK_BUTTON_SECONDARY)
     {
         GdkRGBA *p = eyedropper(event->x,event->y,gtk_widget_get_allocated_width(widget),gtk_widget_get_allocated_height(widget));
+        if (p == NULL)
+            return TRUE;
         gtk_color_chooser_set_rgba(data,p);
         gtk_widget_queue_draw (widget);
     }
@@ -324,6 +326,18 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
                 x1 = event->x;
                 y1 = event->y;
                 s = compress_frame(-1, 1);
+                redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            case RECTANGLE:
+                s = previsualisation(rectangle, x1, y1, event->x, event->y, w, h, color);
+                redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            case CIRCLE:
+                s = previsualisation(circle, x1, y1, event->x, event->y, w, h, color);
+                redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            case LINE:
+                s = previsualisation(line, x1, y1, event->x, event->y, w, h, color);
                 redraw_surface((GtkDrawingArea *)widget, s);
                 break;
             default:
@@ -366,7 +380,6 @@ static gboolean button_release_event_cb (GtkWidget *widget,
         }
     }
 
-    //circle(x1,y1,event->x,event->y,w,h,color)
     free(color);
     return TRUE;
 }
