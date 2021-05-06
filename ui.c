@@ -108,7 +108,10 @@ char* open_dialog(gpointer window)
 {
 	gchar* res = NULL;
 	GtkWidget *dialog;
-	dialog = gtk_file_chooser_dialog_new("Choose a filename", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
+	
+    //dialog = gtk_file_chooser_dialog_new("Choose a filename", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
+	
+    dialog = gtk_file_chooser_dialog_new("Choose a filename", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_SAVE, "_OK" ,GTK_RESPONSE_OK, "_Cancel", GTK_RESPONSE_CANCEL, NULL);
 	gtk_widget_show_all(dialog);
 	gint resp = gtk_dialog_run(GTK_DIALOG(dialog));
 	if(resp == GTK_RESPONSE_OK)
@@ -120,6 +123,7 @@ char* open_dialog(gpointer window)
 
 void on_import(gpointer window, GtkWidget *widget)
 {
+    (void)widget;
 	char* impname = open_dialog(window);
 	if(impname)
 	{

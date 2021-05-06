@@ -23,7 +23,7 @@ Tools tool = DRAW;
 gdouble x1,y1;
 
 /* Sets the whole surface to white */
-static void clear_surface (void)
+/*static void clear_surface (void)
 {
     cairo_t *cr;
 
@@ -34,7 +34,7 @@ static void clear_surface (void)
 
     cairo_destroy (cr);
 }
-
+*/
 void draw_background()
 {
     cairo_t *cr;
