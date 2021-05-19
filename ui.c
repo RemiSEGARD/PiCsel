@@ -90,6 +90,11 @@ void select_circle()
     set_circle();
 }
 
+void play_animation()
+{
+    play(darea);
+}
+
 void on_drawingarea_draw(GtkWidget *widget, gpointer data)
 {
     (void) data;
@@ -203,6 +208,8 @@ int main_ui(int x, int y, char *filename)
     GtkButton* rectangle_button = GTK_BUTTON(gtk_builder_get_object(builder, "rectangle"));
     GtkButton* circle_button = GTK_BUTTON(gtk_builder_get_object(builder, "circle"));
 
+    GtkButton* play_button = GTK_BUTTON(gtk_builder_get_object(builder, "play"));
+
     GtkMenuItem* export_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button"));
     GtkMenuItem* export_picsel_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "save-button"));
     GtkMenuItem* open_item = GTK_MENU_ITEM(gtk_builder_get_object(builder, "open-item"));
@@ -234,6 +241,7 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(new_layer_button, "clicked", G_CALLBACK(on_new_layer), NULL);
 
 
+    g_signal_connect(play_button, "clicked", G_CALLBACK(play_animation), NULL);
 
     g_signal_connect(pen_button, "clicked", G_CALLBACK(select_pen), NULL);
     g_signal_connect(eraser_button, "clicked", G_CALLBACK(select_eraser), NULL);

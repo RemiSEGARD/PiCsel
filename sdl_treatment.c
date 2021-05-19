@@ -820,6 +820,11 @@ GdkRGBA* eyedropper(int x, int y, int win_x, int win_y)
     return color;
 }
 
+Frame* get_frame_list()
+{
+    return sdl_data.frames;
+}
+
 void main_sdl(int width, int height)
 {
     // Creates a new SDL_Surface

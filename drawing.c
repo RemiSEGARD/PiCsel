@@ -3,6 +3,8 @@
 #include "ui.h"
 #include "SDL.h"
 #include "sdl_treatment.h"
+#include <time.h>
+#include <unistd.h>
 
 typedef enum Tools
 {
@@ -346,6 +348,20 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
     }
     free(color);
     return TRUE;
+}
+
+void play(GtkDrawingArea *drawing_area)
+{
+    Frame* list = get_frame_list();
+    SDL_Surface* s;
+    while(list->next != NULL)
+    {
+        list = list->next;
+        g_print("index == %d\n",list->index);
+        s = compress_frame(list->index,1);
+        redraw_surface(drawing_area,s);
+        // need to set a timer
+    }
 }
 
 static gboolean button_release_event_cb (GtkWidget *widget,

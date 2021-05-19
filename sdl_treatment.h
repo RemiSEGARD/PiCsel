@@ -53,6 +53,7 @@ GdkRGBA *eyedropper(int x, int y, int win_x, int win_y);
 SDL_Surface *previsualisation(void (*fun) (int, int, int, int, int, int, GdkRGBA *),
          int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color);
 
+Frame *get_frame_list();
 
 void main_sdl(int width, int height);
 
