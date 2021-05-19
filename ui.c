@@ -4,6 +4,7 @@
 #include "drawing.h"
 #include "sdl_treatment.h"
 #include <string.h>
+#include <glib.h>
 
 GtkDrawingArea *darea;
 
@@ -124,15 +125,33 @@ char* open_dialog(gpointer window)
 void on_import(gpointer window, GtkWidget *widget)
 {
     (void)widget;
-	char* impname = open_dialog(window);
-	if(impname)
-	{
-		main_sdl_import(impname);
+	char* filename = open_dialog(window);
+    if(filename)
+    { 
+        if (g_str_has_suffix(filename, ".picsel"))
+        {
+            main_picsel_import(filename);
+        }
+        else
+        {
+            main_sdl_import(filename);
+        }
+
+
 		SDL_Surface *surface = compress_frame(-1, 1);
 		redraw_surface(darea, surface);
 	}
 }
 
+
+void on_export_picsel(GtkMenuItem *item, gpointer window, gpointer data)
+{
+    (void) item;
+    (void) data;
+    char* expname = open_dialog(window);
+    if(expname)
+    	export_current_frame(expname);
+}
 
 void on_export(GtkMenuItem *item, gpointer window, gpointer data)
 {
@@ -185,16 +204,17 @@ int main_ui(int x, int y, char *filename)
     GtkButton* circle_button = GTK_BUTTON(gtk_builder_get_object(builder, "circle"));
 
     GtkMenuItem* export_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button"));
+    GtkMenuItem* export_picsel_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "save-button"));
     GtkMenuItem* open_item = GTK_MENU_ITEM(gtk_builder_get_object(builder, "open-item"));
 
     if (x != 0)
         main_sdl(x, y);
+    else if (g_str_has_suffix(filename, ".picsel"))
+    {
+        main_picsel_import(filename);
+    }
     else
     {
-        // need to create a thread i think
-        // it looks like gtk is not ready yet to receive drawing stuff
-        // since gtk_main isnt started
-        // BUT we also cant do anything after gtk_main()....
         main_sdl_import(filename);
     }
 
@@ -232,6 +252,7 @@ int main_ui(int x, int y, char *filename)
 
     //connects the menu items
     g_signal_connect(export_button, "activate", G_CALLBACK(on_export), NULL);
+    g_signal_connect(export_picsel_button, "activate", G_CALLBACK(on_export_picsel), NULL);
     g_signal_connect(open_item, "activate", G_CALLBACK(on_import), window);
 
 

@@ -6,7 +6,9 @@
 #include "img_layer.h"
 #include "img_frame.h"
 #include "gtk/gtk.h"
+#include "fileio_picsel.h"
 
+/*
 typedef struct SDL_data
 {
     int width;
@@ -19,6 +21,7 @@ typedef struct SDL_data
     int curframe;
     int curlayer;
 } SDLdata;
+*/
 
 void prev_frame();
 void next_frame();
@@ -52,6 +55,8 @@ SDL_Surface *previsualisation(void (*fun) (int, int, int, int, int, int, GdkRGBA
 
 
 void main_sdl(int width, int height);
+
+void main_picsel_import(char *filename);
 
 void main_sdl_import(char *filename);
 
