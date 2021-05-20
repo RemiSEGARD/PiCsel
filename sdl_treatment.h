@@ -34,6 +34,8 @@ Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y);
 
 void put_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
 
+Frame *get_frame(int i);
+
 SDL_Surface *compress_frame(int i, int keep_bg);
 
 void export_current_frame(char *filename);
@@ -53,7 +55,7 @@ GdkRGBA *eyedropper(int x, int y, int win_x, int win_y);
 SDL_Surface *previsualisation(void (*fun) (int, int, int, int, int, int, GdkRGBA *),
          int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color);
 
-Frame *get_frame_list();
+struct SDL_data *get_sdl_data();
 
 void main_sdl(int width, int height);
 

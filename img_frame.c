@@ -12,7 +12,7 @@ Frame *init_frame(int w, int h)
     sentinel->prev = NULL;
     sentinel->next = NULL;
     sentinel->layer = NULL;
-    sentinel->duration = 0.0;
+    sentinel->duration = 0;
     sentinel->index = -1;
     sentinel->img = NULL;
     add_frame(sentinel, w , h, 1);
@@ -36,7 +36,7 @@ void add_frame(Frame *list, int w, int h, int nblayer)
         add_layer(new->layer, w, h);
     }
     new->index = list->index + 1;
-    new->duration = 0.0;
+    new->duration = 500;
     Uint32 rmask, gmask, bmask, amask;
 
     /* SDL interprets each pixel as a 32-bit number, so our masks must depend

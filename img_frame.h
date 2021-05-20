@@ -11,7 +11,7 @@ typedef struct Frame
     struct Frame *prev;
     Layer *layer;
     int index;
-    double duration;
+    unsigned duration;
     SDL_Surface *img;
 } Frame;
 

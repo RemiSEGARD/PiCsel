@@ -350,19 +350,6 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
     return TRUE;
 }
 
-void play(GtkDrawingArea *drawing_area)
-{
-    Frame* list = get_frame_list();
-    SDL_Surface* s;
-    while(list->next != NULL)
-    {
-        list = list->next;
-        g_print("index == %d\n",list->index);
-        s = compress_frame(list->index,1);
-        redraw_surface(drawing_area,s);
-        // need to set a timer
-    }
-}
 
 static gboolean button_release_event_cb (GtkWidget *widget,
         GdkEventMotion *event, gpointer data)

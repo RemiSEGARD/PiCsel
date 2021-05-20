@@ -90,9 +90,27 @@ void select_circle()
     set_circle();
 }
 
+struct SDL_data *sdl_dat = NULL;
+guint id = 0;
+
+gboolean play(gpointer data)
+{
+    (void) data;
+    on_next_frame();
+    return TRUE;
+}
+
 void play_animation()
 {
-    play(darea);
+    if (sdl_dat == NULL)
+        sdl_dat = get_sdl_data();
+    if (id == 0)
+        id = g_timeout_add(get_frame(sdl_dat->curframe)->duration, play, NULL);
+    else
+    {
+        g_source_remove(id);
+        id = 0;
+    }
 }
 
 void on_drawingarea_draw(GtkWidget *widget, gpointer data)
@@ -210,7 +228,7 @@ int main_ui(int x, int y, char *filename)
 
     GtkButton* play_button = GTK_BUTTON(gtk_builder_get_object(builder, "play"));
 
-    GtkMenuItem* export_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button"));
+    GtkMenuItem* export_button_img = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-img"));
     GtkMenuItem* export_picsel_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "save-button"));
     GtkMenuItem* open_item = GTK_MENU_ITEM(gtk_builder_get_object(builder, "open-item"));
 
@@ -259,7 +277,7 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(drawing_area, "draw", G_CALLBACK(on_drawingarea_draw), NULL);
 
     //connects the menu items
-    g_signal_connect(export_button, "activate", G_CALLBACK(on_export), NULL);
+    g_signal_connect(export_button_img, "activate", G_CALLBACK(on_export), NULL);
     g_signal_connect(export_picsel_button, "activate", G_CALLBACK(on_export_picsel), NULL);
     g_signal_connect(open_item, "activate", G_CALLBACK(on_import), window);
 

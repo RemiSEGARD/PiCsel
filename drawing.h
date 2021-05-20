@@ -21,6 +21,4 @@ void draw_background();
 
 void setup_drawing(GtkDrawingArea *drawing_area, GtkColorChooser *color);
 
-void play(GtkDrawingArea *drawing_area);
-
 #endif

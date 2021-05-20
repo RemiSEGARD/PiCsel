@@ -35,6 +35,10 @@ void next_frame()
         // no need to change curframe, select_layer does it
         select_layer(sdl_data.curframe+1, sdl_data.curlayer);
     }
+    else
+    {
+        select_layer(0, sdl_data.curlayer);
+    }
 }
 
 void new_frame()
@@ -246,8 +250,11 @@ void export_current_frame(char *filename)
     SDL_Surface *c = compress_frame(sdl_data.curframe, 0);
     if (g_str_has_suffix(filename, ".picsel"))
         export_picsel(filename, &sdl_data);
-    else
+    else //if (g_str_has_suffix(filename, ".bmp"))
         SDL_SaveBMP(c, filename);
+    //else
+    //    png_save_surface(filename, c);
+
     //SDL_SaveBMP(sdl_data.current->img, filename);
 }
 
@@ -351,6 +358,11 @@ void fill(int x, int y, int win_x, int win_y, GdkRGBA* color)
     }
     // gets the color that we want to replace by GdkRGBA* color
     Uint32 pixel = get_pixel(sdl_data.current->img, x, y);
+    /*Uint8 r = color->red * 255;
+    Uint8 g = color->green * 255;
+    Uint8 b = color->blue * 255;
+    Uint8 a = color->alpha * 255;
+    Uint32 color_to_pixel = SDL_MapRGBA(sdl_current->img->format,r,g,b,a);*/
     fill_sdl(x,y,color,pixel);
 }
 
@@ -363,10 +375,16 @@ void fill_sdl(int x, int y, GdkRGBA* color, Uint32 match)
     Uint8 r,g,b,a;
     Uint32 pixel = get_pixel(sdl_data.current->img, x, y);
     SDL_GetRGBA(pixel, sdl_data.current->img->format, &r, &g, &b, &a);
-    
-    if (r == color->red*255 && g == color->green*255 && b == color->blue*255 && a == color->alpha*255)
-        return;
 
+    int cr = color->red*255;
+    int cg = color->green*255;
+    int cb = color->blue*255;
+    int ca = color->alpha*255;
+
+    if (r == cr && g == cg && b == cb && a == ca)
+    {
+        return;
+    }
     // condition needs to be changed to detect the proper pixel now it only detects white pixels
     if (match == pixel)
     {
@@ -817,12 +835,16 @@ GdkRGBA* eyedropper(int x, int y, int win_x, int win_y)
     color->green = green / 255;
     color->blue = blue / 255;
     color->alpha = alpha / 255;
+    g_print("r = %d, red = %f, color->red = %f\n",r,red,color->red);
+    g_print("g = %d, green = %f, color->green = %f\n",g,green,color->green);
+    g_print("b = %d, blue = %f, color->blue = %f\n",b,blue,color->blue);
+    g_print("a = %d, alpha = %f, color->aplha = %f\n",a,alpha,color->alpha);
     return color;
 }
 
-Frame* get_frame_list()
+struct SDL_data* get_sdl_data()
 {
-    return sdl_data.frames;
+    return &sdl_data;
 }
 
 void main_sdl(int width, int height)
@@ -949,7 +971,7 @@ void main_sdl_import(char *filename)
     amask = 0xff000000;
 #endif
 
-    sdl_data.previs = SDL_CreateRGBSurface(0, import->w, import->h, 32,
+    sdl_data.previs = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
                                    rmask, gmask, bmask, amask);
     if (sdl_data.previs == NULL) {
         errx(1, "SDL_CreateRGBSurface() failed");
