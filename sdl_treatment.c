@@ -3,12 +3,12 @@
 #include <SDL_image.h>
 #include <err.h>
 #include <gtk/gtk.h> 
-#include "display_sdl.h"
 #include "sdl_treatment.h"
 #include "img_layer.h"
 #include "img_frame.h"
 #include "fileio_picsel.h"
 #include "savesurf.h"
+#include "gifdec.h"
 #include <math.h>
 #include <glib.h>
 
@@ -904,6 +904,44 @@ void main_sdl(int width, int height)
 void main_picsel_import(char *filename)
 {
     Frame *frame = import_picsel(filename);
+    sdl_data.width = frame->next->img->w;
+    sdl_data.height = frame->next->img->h;
+    sdl_data.frames = frame;
+    sdl_data.current = sdl_data.frames->next->layer->next;
+    sdl_data.nblayer = length_layer(sdl_data.current->prev);
+    sdl_data.nbframe = length_frame(frame);
+    sdl_data.curlayer = 0;
+    sdl_data.curframe = 0;
+    
+    Uint32 rmask, gmask, bmask, amask;
+
+    /* SDL interprets each pixel as a 32-bit number, so our masks must depend
+       on the endianness (byte order) of the machine */
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    rmask = 0xff000000;
+    gmask = 0x00ff0000;
+    bmask = 0x0000ff00;
+    amask = 0x000000ff;
+#else
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+#endif
+
+    sdl_data.previs = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
+                                   rmask, gmask, bmask, amask);
+    if (sdl_data.previs == NULL) {
+        errx(1, "SDL_CreateRGBSurface() failed");
+    }
+    SDL_FillRect(sdl_data.previs, NULL, 0x00000000);
+    
+}
+
+
+void main_gif_import(char *filename)
+{
+    Frame *frame = import_gif(filename);
     sdl_data.width = frame->next->img->w;
     sdl_data.height = frame->next->img->h;
     sdl_data.frames = frame;

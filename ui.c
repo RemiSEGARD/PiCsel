@@ -238,6 +238,10 @@ int main_ui(int x, int y, char *filename)
     {
         main_picsel_import(filename);
     }
+    else if (g_str_has_suffix(filename, ".gif"))
+    {
+        main_gif_import(filename);
+    }
     else
     {
         main_sdl_import(filename);

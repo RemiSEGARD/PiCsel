@@ -61,6 +61,8 @@ void main_sdl(int width, int height);
 
 void main_picsel_import(char *filename);
 
+void main_gif_import(char *filename);
+
 void main_sdl_import(char *filename);
 
 #endif
