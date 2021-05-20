@@ -8,6 +8,7 @@
 #include "img_layer.h"
 #include "img_frame.h"
 #include "fileio_picsel.h"
+#include "savesurf.h"
 #include <math.h>
 #include <glib.h>
 
@@ -250,10 +251,10 @@ void export_current_frame(char *filename)
     SDL_Surface *c = compress_frame(sdl_data.curframe, 0);
     if (g_str_has_suffix(filename, ".picsel"))
         export_picsel(filename, &sdl_data);
-    else //if (g_str_has_suffix(filename, ".bmp"))
+    else if (g_str_has_suffix(filename, ".bmp"))
         SDL_SaveBMP(c, filename);
-    //else
-    //    png_save_surface(filename, c);
+    else
+        png_save_surface(filename, c);
 
     //SDL_SaveBMP(sdl_data.current->img, filename);
 }
