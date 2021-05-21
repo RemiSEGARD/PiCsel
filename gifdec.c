@@ -331,12 +331,15 @@ static int
 read_image_data(gd_GIF *gif, int interlace)
 {
     uint8_t sub_len, shift, byte;
-    int init_key_size, key_size, table_is_full;
-    int frm_off, frm_size, str_len, i, p, x, y;
+    int init_key_size, key_size/*, table_is_full*/;
+    int table_is_full = 0;
+    int frm_off, frm_size, /*str_len,*/ i, p, x, y;
+    int str_len = 0;
     uint16_t key, clear, stop;
     int ret;
     Table *table;
     Entry entry;
+    entry.suffix = 0;
     off_t start, end;
 
     read(gif->fd, &byte, 1);
