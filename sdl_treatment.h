@@ -34,6 +34,8 @@ Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y);
 
 void put_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
 
+void  select_layer(int frame, int layer);
+
 Frame *get_frame(int i);
 
 SDL_Surface *compress_frame(int i, int keep_bg);

@@ -62,6 +62,7 @@ Layer* init_layer(int w, int h)
     Layer *sentinel = malloc(sizeof(Layer));
     sentinel->prev = NULL;
     sentinel->next = NULL;
+    sentinel->shown = 1;
     sentinel->index = -1;
     sentinel->img = bg;
     
@@ -81,6 +82,7 @@ void add_layer(Layer *list, int w, int h)
     list->next = new;
     new->prev = list;
     new->next = NULL;
+    new->shown = 1;
     new->index = list->index + 1;
 
     Uint32 rmask, gmask, bmask, amask;

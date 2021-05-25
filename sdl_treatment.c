@@ -192,28 +192,31 @@ Uint32 compress_pixel(Layer *lay, int x, int y)
     a = 0;
     while (l != NULL)
     {
-        Uint32 pixel = get_pixel(l->img, x, y);
-        Uint8 new_a;
-        Uint8 new_r;
-        Uint8 new_g;
-        Uint8 new_b;
-        SDL_GetRGBA(pixel, l->img->format,
-                &new_r, &new_g, &new_b, &new_a);
-        double r1 = r, g1 = g, b1 = b, a1 = a;
-        double r0 = new_r, g0 = new_g, b0 = new_b, a0 = new_a;
-        r1 /= 255;
-        g1 /= 255;
-        b1 /= 255;
-        a1 /= 255;
-        r0 /= 255;
-        g0 /= 255;
-        b0 /= 255;
-        a0 /= 255;
-        Uint8 a01 = (1 - a0) * a1 + a0;
-        r = ((1 - a0) * a1 * r1 + a0 * r0) / a01 * 255;
-        g = ((1 - a0) * a1 * g1 + a0 * g0) / a01 * 255;
-        b = ((1 - a0) * a1 * b1 + a0 * b0) / a01 * 255;
-        a = a01 * 255;
+        if (l->shown)
+        {
+            Uint32 pixel = get_pixel(l->img, x, y);
+            Uint8 new_a;
+            Uint8 new_r;
+            Uint8 new_g;
+            Uint8 new_b;
+            SDL_GetRGBA(pixel, l->img->format,
+                    &new_r, &new_g, &new_b, &new_a);
+            double r1 = r, g1 = g, b1 = b, a1 = a;
+            double r0 = new_r, g0 = new_g, b0 = new_b, a0 = new_a;
+            r1 /= 255;
+            g1 /= 255;
+            b1 /= 255;
+            a1 /= 255;
+            r0 /= 255;
+            g0 /= 255;
+            b0 /= 255;
+            a0 /= 255;
+            Uint8 a01 = (1 - a0) * a1 + a0;
+            r = ((1 - a0) * a1 * r1 + a0 * r0) / a01 * 255;
+            g = ((1 - a0) * a1 * g1 + a0 * g0) / a01 * 255;
+            b = ((1 - a0) * a1 * b1 + a0 * b0) / a01 * 255;
+            a = a01 * 255;
+        }
         l = l->next;
     }
     return SDL_MapRGBA(lay->img->format, r, g, b, a);

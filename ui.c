@@ -4,9 +4,13 @@
 #include "drawing.h"
 #include "sdl_treatment.h"
 #include <string.h>
+#include "img_frame.h"
+#include "img_layer.h"
 #include <glib.h>
 
 GtkDrawingArea *darea;
+
+struct SDL_data *sdl_dat = NULL;
 
 // signal for selecting tools 
 gint tpen = 1;
@@ -20,6 +24,15 @@ void on_quit()
 {
     //free_all call = free liste de layers + les sdl surface
     gtk_main_quit();
+}
+
+
+void choose_frame(GtkWidget* widget, gpointer data)
+{
+    (void) widget;
+    select_layer(*((int *)data), sdl_dat->curlayer);
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
 }
 
 void on_prev_frame()
@@ -37,9 +50,51 @@ void on_next_frame()
 
 }
 
-void on_new_frame()
+void on_new_frame(GtkWidget *widget, gpointer data)
 {
+    (void) widget;
+    char label[10];
+    sprintf(label, "%u", sdl_dat->nbframe + 1);
+    GtkWidget *button = gtk_button_new_with_label(label);
+    
     new_frame();
+    gtk_grid_insert_column(data, sdl_dat->nbframe);
+    gtk_grid_attach(data, button, sdl_dat->nbframe, 0, 1, 1);
+    gtk_widget_show(button);
+    int *index = (int *)malloc(sizeof(int));
+    *index = sdl_dat->nbframe - 1;
+    g_signal_connect(button, "clicked", G_CALLBACK(choose_frame), index);
+}
+
+void choose_layer(GtkWidget *widget, gpointer data)
+{
+    (void) widget;
+    select_layer(sdl_dat->curframe, *((int *)data));
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
+}
+
+void hide_show_layer(GtkWidget *widget, gpointer data)
+{
+    (void) widget;
+    Frame *f = sdl_dat->frames->next;
+    while (f != NULL)
+    {
+        Layer *l = f->layer->next;
+        int n = *((int *)data);
+        while (n > 0)
+        {
+            l = l->next;
+            n--;
+        }
+        if (l->shown)
+            l->shown = 0;
+        else
+            l->shown = 1;
+        f = f->next;
+    }
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
 }
 
 void on_prev_layer()
@@ -52,9 +107,26 @@ void on_next_layer()
     next_layer();
 }
 
-void on_new_layer()
+void on_new_layer(GtkWidget *widget, gpointer data)
 {
+    (void) widget;
+    char label[10];
+    sprintf(label, "%u", sdl_dat->nblayer + 1);
+    GtkWidget *button = gtk_button_new_with_label(label);
+    
     new_layer();
+    gtk_grid_insert_column(data, sdl_dat->nblayer);
+    gtk_grid_attach(data, button, sdl_dat->nblayer, 0, 1, 1);
+    gtk_widget_show(button);
+    int *index = (int *) malloc(sizeof(int));
+    *index = sdl_dat->nblayer - 1;
+    g_signal_connect(button, "clicked", G_CALLBACK(choose_layer), index);
+    
+    button = gtk_toggle_button_new_with_label("");
+    
+    gtk_grid_attach(data, button, sdl_dat->nblayer, 1, 1, 1);
+    gtk_widget_show(button);
+    g_signal_connect(button, "clicked", G_CALLBACK(hide_show_layer), index);
 }
 
 int w;
@@ -90,7 +162,6 @@ void select_circle()
     set_circle();
 }
 
-struct SDL_data *sdl_dat = NULL;
 guint id = 0;
 
 gboolean play(gpointer data)
@@ -210,12 +281,17 @@ int main_ui(int x, int y, char *filename)
     GtkColorChooser* color_select = GTK_COLOR_CHOOSER(gtk_builder_get_object(builder, "color"));
 
 
-    GtkButton* prev_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "prev_frame"));
-    GtkButton* next_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_frame"));
-    GtkButton* new_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_frame"));
-    GtkButton* prev_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "prev_layer"));
-    GtkButton* next_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_layer"));
-    GtkButton* new_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_layer"));
+    //GtkButton* prev_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "prev_frame"));
+    //GtkButton* next_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_frame"));
+    //GtkButton* new_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_frame"));
+    //GtkButton* prev_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "prev_layer"));
+    //GtkButton* next_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_layer"));
+    //GtkButton* new_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_layer"));
+
+    GtkButton* add_frame = GTK_BUTTON(gtk_builder_get_object(builder, "add_frame"));
+    GtkButton* add_layer = GTK_BUTTON(gtk_builder_get_object(builder, "add_layer"));
+    GtkGrid* frame_grid = GTK_GRID(gtk_builder_get_object(builder, "frame_grid"));
+    GtkGrid* layer_grid = GTK_GRID(gtk_builder_get_object(builder, "layer_grid"));
 
     // button for slecting tools
 
@@ -255,14 +331,41 @@ int main_ui(int x, int y, char *filename)
     // MenuBar Signal
     //gtk_menu_item_activate(export_button);
 
-    g_signal_connect(prev_frame_button, "clicked", G_CALLBACK(on_prev_frame), NULL);
-    g_signal_connect(next_frame_button, "clicked", G_CALLBACK(on_next_frame), NULL);
-    g_signal_connect(new_frame_button, "clicked", G_CALLBACK(on_new_frame), NULL);
-    g_signal_connect(prev_layer_button, "clicked", G_CALLBACK(on_prev_layer), NULL);
-    g_signal_connect(next_layer_button, "clicked", G_CALLBACK(on_next_layer), NULL);
-    g_signal_connect(new_layer_button, "clicked", G_CALLBACK(on_new_layer), NULL);
+    //g_signal_connect(prev_frame_button, "clicked", G_CALLBACK(on_prev_frame), NULL);
+    //g_signal_connect(next_frame_button, "clicked", G_CALLBACK(on_next_frame), NULL);
+    //g_signal_connect(new_frame_button, "clicked", G_CALLBACK(on_new_frame), NULL);
+    //g_signal_connect(prev_layer_button, "clicked", G_CALLBACK(on_prev_layer), NULL);
+    //g_signal_connect(next_layer_button, "clicked", G_CALLBACK(on_next_layer), NULL);
+    //g_signal_connect(new_layer_button, "clicked", G_CALLBACK(on_new_layer), NULL);
+    
+    g_signal_connect(add_frame, "clicked", G_CALLBACK(on_new_frame), frame_grid);
+    g_signal_connect(add_layer, "clicked", G_CALLBACK(on_new_layer), layer_grid);
+    
+    // button 1 for layers and frame
+    GtkWidget *button = gtk_button_new_with_label("1");
+    
+    gtk_grid_insert_column(frame_grid, 0);
+    gtk_grid_attach(frame_grid, button, 0, 0, 1, 1);
+    gtk_widget_show(button);
+    int *index = (int *)malloc(sizeof(int));
+    *index = 0;
+    g_signal_connect(button, "clicked", G_CALLBACK(choose_frame), index);
+    
+    button = gtk_button_new_with_label("1");
+    
+    gtk_grid_insert_column(layer_grid, 0);
+    gtk_grid_attach(layer_grid, button, 0, 0, 1, 1);
+    gtk_widget_show(button);
+    g_signal_connect(button, "clicked", G_CALLBACK(choose_layer), index);
+
+    button = gtk_toggle_button_new_with_label("");
+    
+    gtk_grid_attach(layer_grid, button, 0, 1, 1, 1);
+    gtk_widget_show(button);
+    g_signal_connect(button, "clicked", G_CALLBACK(hide_show_layer), index);
 
 
+    // tools signal
     g_signal_connect(play_button, "clicked", G_CALLBACK(play_animation), NULL);
 
     g_signal_connect(pen_button, "clicked", G_CALLBACK(select_pen), NULL);
@@ -285,6 +388,9 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(export_picsel_button, "activate", G_CALLBACK(on_export_picsel), NULL);
     g_signal_connect(open_item, "activate", G_CALLBACK(on_import), window);
 
+
+    if (sdl_dat == NULL)
+        sdl_dat = get_sdl_data();
 
     //open_dialog(window);
     

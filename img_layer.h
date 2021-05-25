@@ -10,6 +10,7 @@ typedef struct Layer
     struct Layer *next;
     struct Layer *prev;
     SDL_Surface *img;
+    int shown;
     int index;
 } Layer;
 
