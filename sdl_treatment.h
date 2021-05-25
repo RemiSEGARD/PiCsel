@@ -42,6 +42,8 @@ SDL_Surface *compress_frame(int i, int keep_bg);
 
 void export_current_frame(char *filename);
 
+void export_sprite(char *filename);
+
 GdkRectangle calculate_coord(int x, int y, int win_x, int win_y, GdkRGBA* color);
 
 void fill(int x, int y, int win_x, int win_y, GdkRGBA* color);
