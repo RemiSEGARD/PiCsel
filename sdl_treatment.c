@@ -263,7 +263,41 @@ void export_current_frame(char *filename)
     //SDL_SaveBMP(sdl_data.current->img, filename);
 }
 
-
+void export_sprite(char *filename)
+{
+    Frame *list = sdl_data.frames->next;
+    Uint32 rmask, gmask, bmask, amask;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    rmask = 0xff000000;
+    gmask = 0x00ff0000;
+    bmask = 0x0000ff00;
+    amask = 0x000000ff;
+#else
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+#endif
+    SDL_Surface *spr = SDL_CreateRGBSurface(0, sdl_data.width * sdl_data.nbframe, sdl_data.height, 32,
+                                           rmask, gmask, bmask, amask);
+    int nb = 0;
+    while (list != NULL)
+    {
+        SDL_Surface *cur = compress_frame(list->index,0);
+        g_print("%d\n",list->index);
+        for (int i = 0; i < sdl_data.width; i++)
+        {
+            for (int j = 0; j < sdl_data.height; j++)
+            {
+                Uint32 pixel = get_pixel(cur, i, j);
+                put_pixel(spr, i + sdl_data.width*nb, j, pixel);
+            }
+        }
+        nb++;
+        list = list->next;
+    }
+    png_save_surface(filename, spr);
+}
 /* Compute the position to change the pixel in SDL from the coords of the click
  *  in the GtkDrawingArea
  * x = position of the click

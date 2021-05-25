@@ -247,6 +247,15 @@ void on_import(gpointer window, GtkWidget *widget)
 }
 
 
+void on_export_sprite(GtkMenuItem *item, gpointer window, gpointer data)
+{
+    (void) item;
+    (void) data;
+    char* expname = open_dialog(window);
+    if(expname)
+    	export_sprite(expname);
+}
+
 void on_export_picsel(GtkMenuItem *item, gpointer window, gpointer data)
 {
     (void) item;
@@ -316,6 +325,7 @@ int main_ui(int x, int y, char *filename)
     GtkMenuItem* export_button_img = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-img"));
     GtkMenuItem* export_picsel_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "save-button"));
     GtkMenuItem* open_item = GTK_MENU_ITEM(gtk_builder_get_object(builder, "open-item"));
+    GtkMenuItem* export_button_sprite = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-ss"));
 
     if (x != 0)
         main_sdl(x, y);
@@ -399,6 +409,7 @@ int main_ui(int x, int y, char *filename)
     //connects the menu items
     g_signal_connect(export_button_img, "activate", G_CALLBACK(on_export), NULL);
     g_signal_connect(export_picsel_button, "activate", G_CALLBACK(on_export_picsel), NULL);
+    g_signal_connect(export_button_sprite, "activate", G_CALLBACK(on_export_sprite), NULL);
     g_signal_connect(open_item, "activate", G_CALLBACK(on_import), window);
 
 
