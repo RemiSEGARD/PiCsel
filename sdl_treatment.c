@@ -349,7 +349,7 @@ void fill(int x, int y, int win_x, int win_y, GdkRGBA* color)
 {
     // function called by drawing.c
     // prepares everything for the actual fill function
-
+    if (sdl_data.current->shown == 0 ) return;
     // calculate the new coordinates
     if (win_x < win_y)
     {

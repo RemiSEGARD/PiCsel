@@ -31,9 +31,20 @@ void add_frame(Frame *list, int w, int h, int nblayer)
     new->next = NULL;
     new->prev = list;
     new->layer = init_layer(w, h);
+    Layer *tmp = list->layer->next;;
     for (int i = 0; i < nblayer - 1; i++)
     {
         add_layer(new->layer, w, h);
+    }
+    if (list->index != -1)
+    {
+        Layer *new_layer = new->layer->next;
+        while (tmp != NULL)
+        {
+            new_layer->shown = tmp->shown;
+            new_layer = new_layer->next;
+            tmp = tmp->next;
+        }
     }
     new->index = list->index + 1;
     new->duration = 500;
