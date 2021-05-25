@@ -222,7 +222,6 @@ char* open_dialog(gpointer window)
 	if(resp == GTK_RESPONSE_OK)
 		res = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 	gtk_widget_destroy(dialog);
-	printf("%s\n", res);
 	return (char*)res;
 }
 

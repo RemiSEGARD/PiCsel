@@ -148,7 +148,8 @@ void put_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
     // Function from epita prog S3 site
     Uint8 *p = pixel_ref(surface, x, y);
 
-    if (x < 0 || y < 0 || x >= surface->w || y >= surface->h)
+    if (x < 0 || y < 0 || x >= surface->w || y >= surface->h || 
+            (sdl_data.current->shown == 0 && sdl_data.current->img == surface))
         return;
 
     switch(surface->format->BytesPerPixel)
@@ -839,10 +840,6 @@ GdkRGBA* eyedropper(int x, int y, int win_x, int win_y)
     color->green = green / 255;
     color->blue = blue / 255;
     color->alpha = alpha / 255;
-    g_print("r = %d, red = %f, color->red = %f\n",r,red,color->red);
-    g_print("g = %d, green = %f, color->green = %f\n",g,green,color->green);
-    g_print("b = %d, blue = %f, color->blue = %f\n",b,blue,color->blue);
-    g_print("a = %d, alpha = %f, color->aplha = %f\n",a,alpha,color->alpha);
     return color;
 }
 
