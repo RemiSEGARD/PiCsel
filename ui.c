@@ -12,6 +12,9 @@ GtkDrawingArea *darea;
 
 struct SDL_data *sdl_dat = NULL;
 
+GtkWidget *curframe_button;
+GtkWidget *curlayer_button;
+
 // signal for selecting tools 
 gint tpen = 1;
 gint teraser = 2;
@@ -33,6 +36,10 @@ void choose_frame(GtkWidget* widget, gpointer data)
     select_layer(*((int *)data), sdl_dat->curlayer);
     SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
+    gtk_widget_set_sensitive(curframe_button, TRUE);
+    gtk_widget_set_sensitive(widget, FALSE);
+    curframe_button = widget;
+    
 }
 
 void on_prev_frame()
@@ -72,6 +79,9 @@ void choose_layer(GtkWidget *widget, gpointer data)
     select_layer(sdl_dat->curframe, *((int *)data));
     SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
+    gtk_widget_set_sensitive(curlayer_button, TRUE);
+    gtk_widget_set_sensitive(widget, FALSE);
+    curlayer_button = widget;
 }
 
 void hide_show_layer(GtkWidget *widget, gpointer data)
@@ -350,6 +360,8 @@ int main_ui(int x, int y, char *filename)
     int *index = (int *)malloc(sizeof(int));
     *index = 0;
     g_signal_connect(button, "clicked", G_CALLBACK(choose_frame), index);
+    gtk_widget_set_sensitive(button, FALSE);
+    curframe_button = button;
     
     button = gtk_button_new_with_label("1");
     
@@ -357,6 +369,8 @@ int main_ui(int x, int y, char *filename)
     gtk_grid_attach(layer_grid, button, 0, 0, 1, 1);
     gtk_widget_show(button);
     g_signal_connect(button, "clicked", G_CALLBACK(choose_layer), index);
+    gtk_widget_set_sensitive(button, FALSE);
+    curlayer_button = button;
 
     button = gtk_toggle_button_new_with_label("");
     
