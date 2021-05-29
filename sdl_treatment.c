@@ -9,6 +9,7 @@
 #include "fileio_picsel.h"
 #include "savesurf.h"
 #include "gifdec.h"
+#include "gifenc.h"
 #include <math.h>
 #include <glib.h>
 
@@ -298,6 +299,12 @@ void export_sprite(char *filename)
     }
     png_save_surface(filename, spr);
 }
+
+void export_current_gif(char* filename)
+{
+    export_gif(filename, &sdl_data);
+}
+
 /* Compute the position to change the pixel in SDL from the coords of the click
  *  in the GtkDrawingArea
  * x = position of the click

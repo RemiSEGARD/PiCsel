@@ -263,6 +263,14 @@ void on_export_sprite(GtkMenuItem *item, gpointer window, gpointer data)
     	export_sprite(expname);
 }
 
+void on_export_gif(GtkMenuItem *item, gpointer window, gpointer data)
+{
+    (void) item;
+    (void) data;
+    char* expname = open_dialog(window);
+    if(expname)
+    	export_current_gif(expname);
+}
 void on_export_picsel(GtkMenuItem *item, gpointer window, gpointer data)
 {
     (void) item;
@@ -333,7 +341,7 @@ int main_ui(int x, int y, char *filename)
     GtkMenuItem* export_picsel_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "save-button"));
     GtkMenuItem* open_item = GTK_MENU_ITEM(gtk_builder_get_object(builder, "open-item"));
     GtkMenuItem* export_button_sprite = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-ss"));
-
+    GtkMenuItem* export_button_gif = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-gif"));
     if (x != 0)
         main_sdl(x, y);
     else if (g_str_has_suffix(filename, ".picsel"))
@@ -414,9 +422,10 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(drawing_area, "draw", G_CALLBACK(on_drawingarea_draw), NULL);
 
     //connects the menu items
-    g_signal_connect(export_button_img, "activate", G_CALLBACK(on_export), window);
-    g_signal_connect(export_picsel_button, "activate", G_CALLBACK(on_export_picsel), window);
-    g_signal_connect(export_button_sprite, "activate", G_CALLBACK(on_export_sprite), window);
+    g_signal_connect(export_button_img, "activate", G_CALLBACK(on_export), NULL);
+    g_signal_connect(export_picsel_button, "activate", G_CALLBACK(on_export_picsel), NULL);
+    g_signal_connect(export_button_sprite, "activate", G_CALLBACK(on_export_sprite), NULL);
+    g_signal_connect(export_button_gif, "activate", G_CALLBACK(on_export_gif), NULL);
     g_signal_connect(open_item, "activate", G_CALLBACK(on_import), window);
 
 
