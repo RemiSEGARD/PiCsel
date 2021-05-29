@@ -149,8 +149,8 @@ void put_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
     // Function from epita prog S3 site
     Uint8 *p = pixel_ref(surface, x, y);
 
-    if (x < 0 || y < 0 || x >= surface->w || y >= surface->h || 
-            (sdl_data.current->shown == 0 && sdl_data.current->img == surface))
+    if (x < 0 || y < 0 || x >= surface->w || y >= surface->h ||
+            ( sdl_data.current != NULL && (sdl_data.current->shown == 0 && sdl_data.current->img == surface)))
         return;
 
     switch(surface->format->BytesPerPixel)

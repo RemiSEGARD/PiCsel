@@ -14,6 +14,8 @@ struct SDL_data *sdl_dat = NULL;
 
 GtkWidget *curframe_button;
 GtkWidget *curlayer_button;
+GtkGrid* f_grid;
+GtkGrid* l_grid;
 
 // signal for selecting tools 
 gint tpen = 1;
@@ -226,10 +228,83 @@ char* open_dialog(gpointer window)
 	return (char*)res;
 }
 
+void add_grid_buttons()
+{
+    GtkWidget *button = gtk_button_new_with_label("1");
+    
+    gtk_grid_insert_column(f_grid, 0);
+    gtk_grid_attach(f_grid, button, 0, 0, 1, 1);
+    gtk_widget_show(button);
+    int *index = (int *)malloc(sizeof(int));
+    *index = 0;
+    g_signal_connect(button, "clicked", G_CALLBACK(choose_frame), index);
+    gtk_widget_set_sensitive(button, FALSE);
+    curframe_button = button;
+    
+    button = gtk_button_new_with_label("1");
+    
+    gtk_grid_insert_column(l_grid, 0);
+    gtk_grid_attach(l_grid, button, 0, 0, 1, 1);
+    gtk_widget_show(button);
+    g_signal_connect(button, "clicked", G_CALLBACK(choose_layer), index);
+    gtk_widget_set_sensitive(button, FALSE);
+    curlayer_button = button;
+
+    button = gtk_toggle_button_new_with_label("");
+    
+    gtk_grid_attach(l_grid, button, 0, 1, 1, 1);
+    gtk_widget_show(button);
+    g_signal_connect(button, "clicked", G_CALLBACK(hide_show_layer), index);
+
+
+    if (sdl_dat != NULL)
+    {
+        char label[10];
+        GtkWidget *button;
+        int *index;
+        for (int i = 0; i < sdl_dat->nbframe - 1; i++)
+        {
+            sprintf(label, "%u", i + 2);
+            button = gtk_button_new_with_label(label);
+
+            gtk_grid_insert_column(f_grid, i + 1);
+            gtk_grid_attach(f_grid, button, i + 1, 0, 1, 1);
+            gtk_widget_show(button);
+            index = (int *)malloc(sizeof(int));
+            *index = i + 1;
+            g_signal_connect(button, "clicked", G_CALLBACK(choose_frame), index);
+        }
+        for (int i = 0; i < sdl_dat->nblayer - 1; i++)
+        {
+            sprintf(label, "%u", i + 2);
+            button = gtk_button_new_with_label(label);
+
+            gtk_grid_insert_column(l_grid, i + 1);
+            gtk_grid_attach(l_grid, button, i + 1, 0, 1, 1);
+            gtk_widget_show(button);
+            index = (int *) malloc(sizeof(int));
+            *index = i + 1;
+            g_signal_connect(button, "clicked", G_CALLBACK(choose_layer), index);
+
+            button = gtk_toggle_button_new_with_label("");
+
+            gtk_grid_attach(l_grid, button, i + 1, 1, 1, 1);
+            gtk_widget_show(button);
+            g_signal_connect(button, "clicked", G_CALLBACK(hide_show_layer), index);
+        }
+    }
+}
+
 void reset_grids()
 {
-    GtkGrid* frame_grid = GTK_GRID(gtk_builder_get_object(builder, "frame_grid"));
-    GtkGrid* layer_grid = GTK_GRID(gtk_builder_get_object(builder, "layer_grid"));
+    for (int i = 0; i <= sdl_dat->nbframe; i++)
+    {
+        gtk_grid_remove_column(f_grid, 0);
+    }
+    for (int i = 0; i <= sdl_dat->nblayer; i++)
+    {
+        gtk_grid_remove_column(l_grid, 0);
+    }
 }
 
 void on_import(GtkWidget *widget, gpointer window)
@@ -238,6 +313,7 @@ void on_import(GtkWidget *widget, gpointer window)
 	char* filename = open_dialog(window);
     if(filename)
     { 
+        reset_grids();
         if (g_str_has_suffix(filename, ".picsel"))
         {
             main_picsel_import(filename);
@@ -250,6 +326,7 @@ void on_import(GtkWidget *widget, gpointer window)
 
 		SDL_Surface *surface = compress_frame(-1, 1);
 		redraw_surface(darea, surface);
+        add_grid_buttons();
 	}
 }
 
@@ -326,6 +403,9 @@ int main_ui(int x, int y, char *filename)
     GtkGrid* frame_grid = GTK_GRID(gtk_builder_get_object(builder, "frame_grid"));
     GtkGrid* layer_grid = GTK_GRID(gtk_builder_get_object(builder, "layer_grid"));
 
+    f_grid = frame_grid;
+    l_grid = layer_grid;
+
     // button for slecting tools
 
     GtkButton* pen_button = GTK_BUTTON(gtk_builder_get_object(builder, "pen"));
@@ -342,6 +422,7 @@ int main_ui(int x, int y, char *filename)
     GtkMenuItem* open_item = GTK_MENU_ITEM(gtk_builder_get_object(builder, "open-item"));
     GtkMenuItem* export_button_sprite = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-ss"));
     GtkMenuItem* export_button_gif = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-gif"));
+
     if (x != 0)
         main_sdl(x, y);
     else if (g_str_has_suffix(filename, ".picsel"))
@@ -375,7 +456,11 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(add_frame, "clicked", G_CALLBACK(on_new_frame), frame_grid);
     g_signal_connect(add_layer, "clicked", G_CALLBACK(on_new_layer), layer_grid);
     
+    if (sdl_dat == NULL)
+        sdl_dat = get_sdl_data();
+    
     // button 1 for layers and frame
+/*    
     GtkWidget *button = gtk_button_new_with_label("1");
     
     gtk_grid_insert_column(frame_grid, 0);
@@ -401,6 +486,8 @@ int main_ui(int x, int y, char *filename)
     gtk_grid_attach(layer_grid, button, 0, 1, 1, 1);
     gtk_widget_show(button);
     g_signal_connect(button, "clicked", G_CALLBACK(hide_show_layer), index);
+*/
+    add_grid_buttons();
 
 
     // tools signal
@@ -422,15 +509,13 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(drawing_area, "draw", G_CALLBACK(on_drawingarea_draw), NULL);
 
     //connects the menu items
-    g_signal_connect(export_button_img, "activate", G_CALLBACK(on_export), NULL);
-    g_signal_connect(export_picsel_button, "activate", G_CALLBACK(on_export_picsel), NULL);
-    g_signal_connect(export_button_sprite, "activate", G_CALLBACK(on_export_sprite), NULL);
-    g_signal_connect(export_button_gif, "activate", G_CALLBACK(on_export_gif), NULL);
+    g_signal_connect(export_button_img, "activate", G_CALLBACK(on_export), window);
+    g_signal_connect(export_picsel_button, "activate", G_CALLBACK(on_export_picsel), window);
+    g_signal_connect(export_button_sprite, "activate", G_CALLBACK(on_export_sprite), window);
+    g_signal_connect(export_button_gif, "activate", G_CALLBACK(on_export_gif), window);
     g_signal_connect(open_item, "activate", G_CALLBACK(on_import), window);
 
 
-    if (sdl_dat == NULL)
-        sdl_dat = get_sdl_data();
 
     //open_dialog(window);
     
