@@ -213,19 +213,26 @@ char* open_dialog(gpointer window)
 {
 	gchar* res = NULL;
 	GtkWidget *dialog;
-	
+
     //dialog = gtk_file_chooser_dialog_new("Choose a filename", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
 	
     dialog = gtk_file_chooser_dialog_new("Choose a filename", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_SAVE, "_OK" ,GTK_RESPONSE_OK, "_Cancel", GTK_RESPONSE_CANCEL, NULL);
-	gtk_widget_show_all(dialog);
+    gtk_window_set_transient_for(window, (GtkWindow *)dialog);
+	gtk_widget_show(dialog);
 	gint resp = gtk_dialog_run(GTK_DIALOG(dialog));
-	if(resp == GTK_RESPONSE_OK)
+	if(resp != GTK_RESPONSE_NONE)
 		res = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 	gtk_widget_destroy(dialog);
 	return (char*)res;
 }
 
-void on_import(gpointer window, GtkWidget *widget)
+void reset_grids()
+{
+    GtkGrid* frame_grid = GTK_GRID(gtk_builder_get_object(builder, "frame_grid"));
+    GtkGrid* layer_grid = GTK_GRID(gtk_builder_get_object(builder, "layer_grid"));
+}
+
+void on_import(GtkWidget *widget, gpointer window)
 {
     (void)widget;
 	char* filename = open_dialog(window);
@@ -407,9 +414,9 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(drawing_area, "draw", G_CALLBACK(on_drawingarea_draw), NULL);
 
     //connects the menu items
-    g_signal_connect(export_button_img, "activate", G_CALLBACK(on_export), NULL);
-    g_signal_connect(export_picsel_button, "activate", G_CALLBACK(on_export_picsel), NULL);
-    g_signal_connect(export_button_sprite, "activate", G_CALLBACK(on_export_sprite), NULL);
+    g_signal_connect(export_button_img, "activate", G_CALLBACK(on_export), window);
+    g_signal_connect(export_picsel_button, "activate", G_CALLBACK(on_export_picsel), window);
+    g_signal_connect(export_button_sprite, "activate", G_CALLBACK(on_export_sprite), window);
     g_signal_connect(open_item, "activate", G_CALLBACK(on_import), window);
 
 
