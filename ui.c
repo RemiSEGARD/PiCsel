@@ -193,6 +193,7 @@ void play_animation()
     {
         g_source_remove(id);
         id = 0;
+        gtk_button_clicked((GtkButton *)curframe_button);
     }
 }
 
@@ -312,11 +313,15 @@ void on_import(GtkWidget *widget, gpointer window)
     (void)widget;
 	char* filename = open_dialog(window);
     if(filename)
-    { 
+    {
         reset_grids();
         if (g_str_has_suffix(filename, ".picsel"))
         {
             main_picsel_import(filename);
+        }
+        if (g_str_has_suffix(filename, ".gif"))
+        {
+            main_gif_import(filename);
         }
         else
         {

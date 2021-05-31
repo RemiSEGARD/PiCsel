@@ -32,7 +32,7 @@ static void create_background(SDL_Surface *s)
 Layer* init_layer(int w, int h)
 {
     static SDL_Surface *bg = NULL;
-    if (bg == NULL)
+    if (bg == NULL || bg->w != w || bg->h != h)
     {
         Uint32 rmask, gmask, bmask, amask;
 

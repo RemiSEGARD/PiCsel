@@ -122,7 +122,6 @@ Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y)
 {
     // Function from epita prog S3 site
     Uint8 *p = pixel_ref(surface, x, y);
-
     switch (surface->format->BytesPerPixel)
     {
         case 1:
@@ -994,6 +993,8 @@ void main_gif_import(char *filename)
     
     Uint32 rmask, gmask, bmask, amask;
 
+    
+
     /* SDL interprets each pixel as a 32-bit number, so our masks must depend
        on the endianness (byte order) of the machine */
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -1036,6 +1037,8 @@ void main_sdl_import(char *filename)
     sdl_data.curframe = 0;
     
     Uint32 rmask, gmask, bmask, amask;
+    
+    g_print("%p", sdl_data.frames->next->layer->next);
 
     /* SDL interprets each pixel as a 32-bit number, so our masks must depend
        on the endianness (byte order) of the machine */

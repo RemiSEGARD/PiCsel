@@ -1,7 +1,7 @@
 #include "gifenc.h"
 #include "fileio_picsel.h"
-
-
+#include "gtk/gtk.h"
+#include <SDL/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,7 +42,7 @@ struct Node {
 };
 typedef struct Node Node;
 
-static Node *
+    static Node *
 new_node(uint16_t key, int degree)
 {
     Node *node = calloc(1, sizeof(*node) + degree * sizeof(Node *));
@@ -51,7 +51,7 @@ new_node(uint16_t key, int degree)
     return node;
 }
 
-static Node *
+    static Node *
 new_trie(int degree, int *nkeys)
 {
     Node *root = new_node(0, degree);
@@ -62,7 +62,7 @@ new_trie(int degree, int *nkeys)
     return root;
 }
 
-static void
+    static void
 del_trie(Node *root, int degree)
 {
     if (!root)
@@ -73,21 +73,21 @@ del_trie(Node *root, int degree)
 }
 
 #define write_and_store(s, dst, fd, src, n) \
-do { \
-    write(fd, src, n); \
-    if (s) { \
-        memcpy(dst, src, n); \
-        dst += n; \
-    } \
-} while (0);
+    do { \
+        write(fd, src, n); \
+        if (s) { \
+            memcpy(dst, src, n); \
+            dst += n; \
+        } \
+    } while (0);
 
 static void put_loop(ge_GIF *gif, uint16_t loop);
 
-ge_GIF *
+    ge_GIF *
 ge_new_gif(
-    const char *fname, uint16_t width, uint16_t height,
-    uint8_t *palette, int depth, int loop
-)
+        const char *fname, uint16_t width, uint16_t height,
+        uint8_t *palette, int depth, int loop
+        )
 {
     int i, r, g, b, v;
     int store_gct, custom_gct;
@@ -132,8 +132,8 @@ ge_new_gif(
             for (g = 0; g < 6; g++) {
                 for (b = 0; b < 6; b++) {
                     write_and_store(store_gct, palette, gif->fd,
-                      ((uint8_t []) {r*51, g*51, b*51}), 3
-                    );
+                            ((uint8_t []) {r*51, g*51, b*51}), 3
+                            );
                     if (++i == 1 << depth)
                         goto done_gct;
                 }
@@ -142,10 +142,12 @@ ge_new_gif(
         for (i = 1; i <= 24; i++) {
             v = i * 0xFF / 25;
             write_and_store(store_gct, palette, gif->fd,
-              ((uint8_t []) {v, v, v}), 3
-            );
+                    ((uint8_t []) {v, v, v}), 3
+                    );
         }
     }
+
+
 done_gct:
     if (loop >= 0 && loop <= 0xFFFF)
         put_loop(gif, (uint16_t) loop);
@@ -156,7 +158,7 @@ no_gif:
     return NULL;
 }
 
-static void
+    static void
 put_loop(ge_GIF *gif, uint16_t loop)
 {
     write(gif->fd, (uint8_t []) {'!', 0xFF, 0x0B}, 3);
@@ -169,7 +171,7 @@ put_loop(ge_GIF *gif, uint16_t loop)
 /* Add packed key to buffer, updating offset and partial.
  *   gif->offset holds position to put next *bit*
  *   gif->partial holds bits to include in next byte */
-static void
+    static void
 put_key(ge_GIF *gif, uint16_t key, int key_size)
 {
     int byte_offset, bit_offset, bits_to_write;
@@ -190,7 +192,7 @@ put_key(ge_GIF *gif, uint16_t key, int key_size)
     gif->offset = (gif->offset + key_size) % (0xFF * 8);
 }
 
-static void
+    static void
 end_key(ge_GIF *gif)
 {
     int byte_offset;
@@ -205,7 +207,7 @@ end_key(ge_GIF *gif)
     gif->offset = gif->partial = 0;
 }
 
-static void
+    static void
 put_image(ge_GIF *gif, uint16_t w, uint16_t h, uint16_t x, uint16_t y)
 {
     int nkeys, key_size, i, j;
@@ -249,7 +251,7 @@ put_image(ge_GIF *gif, uint16_t w, uint16_t h, uint16_t x, uint16_t y)
     del_trie(root, degree);
 }
 
-static int
+    static int
 get_bbox(ge_GIF *gif, uint16_t *w, uint16_t *h, uint16_t *x, uint16_t *y)
 {
     int i, j, k;
@@ -277,7 +279,7 @@ get_bbox(ge_GIF *gif, uint16_t *w, uint16_t *h, uint16_t *x, uint16_t *y)
     }
 }
 
-static void
+    static void
 set_delay(ge_GIF *gif, uint16_t d)
 {
     write(gif->fd, (uint8_t []) {'!', 0xF9, 0x04, 0x04}, 4);
@@ -285,7 +287,7 @@ set_delay(ge_GIF *gif, uint16_t d)
     write(gif->fd, "\0\0", 2);
 }
 
-void
+    void
 ge_add_frame(ge_GIF *gif, uint16_t delay)
 {
     uint16_t w, h, x, y;
@@ -309,7 +311,7 @@ ge_add_frame(ge_GIF *gif, uint16_t delay)
     gif->frame = tmp;
 }
 
-void
+    void
 ge_close_gif(ge_GIF* gif)
 {
     write(gif->fd, ";", 1);
@@ -317,31 +319,103 @@ ge_close_gif(ge_GIF* gif)
     free(gif);
 }
 
+Uint8 *create_palette()
+{
+    Uint8* p = malloc(sizeof(Uint8) * 256 * 3);
+    memcpy(p, vga, sizeof(vga));
+    Uint8 *tmp = p + 0x30;
+    for (int r = 0; r < 6; r++)
+    {
+        for (int g = 0; g < 6; g++)
+        {
+            for (int b = 0; b < 6; b++)
+            {
+                *tmp = r * 51;
+                tmp++;
+                *tmp = g * 51;
+                tmp++;
+                *tmp = b * 51;
+                tmp++;
+            }
+        }
+    }
+    for (int i = 0; i < 24; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            *tmp = i * 0xff / 25;
+            tmp++;
+        }
+    }
+    
+    return p;
+}
+
+Uint8 get_nearest(Uint8 *p, Uint8 r, Uint8 g, Uint8 b)
+{
+    unsigned int near_per = 0;
+    Uint8 res = 0;
+    for (int i = 0; i < 256 * 3; i += 3)
+    {
+        unsigned int per_r = *(p + i);
+        if (*(p + i) > r )
+            per_r = r * 100 / (*(p + i) + 1);
+        else
+            per_r = *(p + i) * 100 / (r + 1);
+
+        unsigned int per_g = *(p + i + 1);
+        if (*(p + i + 1) > g )
+            per_g = g * 100 / (*(p + i + 1) + 1);
+        else
+            per_g = *(p + i + 1) * 100 / (g + 1);
+
+        unsigned int per_b = *(p + i + 2);
+        if (*(p + i + 2) > b )
+            per_b = b * 100 / (*(p + i + 2) + 1);
+        else
+            per_b = *(p + i + 2) * 100 / (b + 1);
+
+        unsigned int per = (per_r + per_g + per_b) / 3;
+        if (per > near_per)
+        {
+            near_per = per;
+            res = i / 3;
+        }
+    }
+    return res;
+}
+
 void export_gif(char *filename, SDLdata *sdl_data)
 {
     ge_GIF *gif = ge_new_gif(
-        filename,
-        sdl_data->width,sdl_data->height,
-        NULL,
-        8,
-        0
-    );
-   // draw
-   Frame *list = sdl_data->frames->next;
-   while (list != NULL)
-   {
-       SDL_Surface *surface = compress_frame(list->index,0);
-       for (int i = 0; i < sdl_data->width; i++)
-       {
-           for (int j = 0; j < sdl_data->height; j++)
-           {
-               Uint32 pixel = get_pixel(surface,i,j);
-               gif->frame[j * sdl_data->height + i] = (uint8_t) pixel%256;
-           }
-       }
-       ge_add_frame(gif, list->duration/10);
-       list = list->next;
-   }
+            filename,
+            sdl_data->width,sdl_data->height,
+            NULL,
+            8,
+            0
+            );
+    // draw
+    
+    Uint8 *p = create_palette();
+
+    Frame *list = sdl_data->frames->next;
+    while (list != NULL)
+    {
+        SDL_Surface *surface = compress_frame(list->index,0);
+        for (int i = 0; i < sdl_data->width; i++)
+        {
+            for (int j = 0; j < sdl_data->height; j++)
+            {
+                Uint32 pixel = get_pixel(surface,i,j);
+                Uint8 r, g, b;
+                SDL_GetRGB(pixel, surface->format, &r, &g, &b);
+                Uint8 res = get_nearest(p, r, g, b);
+                gif->frame[j * sdl_data->height + i] = res;
+            }
+        }
+        ge_add_frame(gif, list->duration/10);
+        list = list->next;
+    }
 
     ge_close_gif(gif);
 }
