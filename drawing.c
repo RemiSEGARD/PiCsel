@@ -3,6 +3,7 @@
 #include "ui.h"
 #include "SDL.h"
 #include "sdl_treatment.h"
+#include "fileio_picsel.h"
 #include <time.h>
 #include <unistd.h>
 
@@ -14,6 +15,7 @@ typedef enum Tools
     LINE,
     RECTANGLE,
     CIRCLE,
+    SELECT,
 } Tools;
 
 
@@ -21,7 +23,7 @@ typedef enum Tools
 static cairo_surface_t *surface = NULL;
 
 // State Variables
-Tools tool = DRAW;
+Tools tool = SELECT;
 gdouble x1,y1;
 
 /* Sets the whole surface to white */
@@ -245,6 +247,80 @@ void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surf)
     }
 }
 
+// Selection
+
+SDLdata *sdldata;
+int sx1 = -1, sx2 = -1, sy1 = -1, sy2 = -1;
+int pixel_size;
+int id_to;
+
+void selection_press(int x, int y, int win_x, int win_y)
+{
+    if (sdldata == NULL)
+        sdldata = get_sdl_data();
+    x1 = x;
+    y1 = y;
+    // Nothing selected
+    if (sx1 == -1)
+    {
+        // Get pixel size
+        if (win_x < win_y)
+            pixel_size = win_x / sdldata->width;
+        else
+            pixel_size = win_y / sdldata->height;
+    }
+    sx1 = x;
+    sy1 = y;
+}
+
+void selection_motion(int x, int y, int win_x, int win_y, GtkWidget *widget)
+{
+    /*if (win_x < win_y)
+    {
+        rect.x = x - x % (win_x / sdl_data.width);
+        rect.y = y - y % (win_x / sdl_data.width);
+        if (x >= 0 && y >= 0 
+                && y < sdl_data.height * rect.height
+                && x < sdl_data.width * rect.width)
+        {
+        }
+    }
+    else
+    {
+        rect.x = x - x % (win_y / sdl_data.height);
+        rect.y = y - y % (win_y / sdl_data.height);
+        if (x >= 0 && y >= 0 
+                && y < sdl_data.height * rect.height
+                && x < sdl_data.width * rect.width)
+        {
+        }
+    }*/
+    //x * sdl_data.width / (win_x - win_x % sdl_data.width)
+    SDL_Surface *s;
+    if (win_x < win_y)
+    {
+        s = previs_select(
+            sx1 * sdldata->width / (win_x - win_x % sdldata->width),
+            sy1 * sdldata->width / (win_x - win_x % sdldata->width),
+            x * sdldata->width / (win_x - win_x % sdldata->width),
+            y * sdldata->width / (win_x - win_x % sdldata->width));
+    }
+    else
+    {
+        s = previs_select(
+            sx1 * sdldata->height / (win_y - win_y % sdldata->height),
+            sy1 * sdldata->height / (win_y - win_y % sdldata->height),
+            x * sdldata->height / (win_y - win_y % sdldata->height),
+            y * sdldata->height / (win_y - win_y % sdldata->height));
+    }
+
+    redraw_surface((GtkDrawingArea *)widget, s);
+}
+
+void selection_release(int x, int y)
+{
+    
+}
 
 
 /* Handle the different types of button pressed */
@@ -278,6 +354,11 @@ static gboolean button_press_event_cb (GtkWidget *widget,
                         gtk_widget_get_allocated_height(widget), color);
                 SDL_Surface *s = compress_frame(-1, 1);
                 redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            case SELECT:
+                selection_press(event->x, event->y,
+                        gtk_widget_get_allocated_width(widget),
+                        gtk_widget_get_allocated_height(widget));
                 break;
             default:
                 break;
@@ -341,6 +422,12 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
             case LINE:
                 s = previsualisation(line, x1, y1, event->x, event->y, w, h, color);
                 redraw_surface((GtkDrawingArea *)widget, s);
+                break;
+            case SELECT:
+                selection_motion(event->x, event->y,
+                        gtk_widget_get_allocated_width(widget),
+                        gtk_widget_get_allocated_height(widget), widget);
+
                 break;
             default:
                 break;

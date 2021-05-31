@@ -522,6 +522,7 @@ int main_ui(int x, int y, char *filename)
 
 
 
+    g_print("hey");
     //open_dialog(window);
     
     // Runs the main loop
