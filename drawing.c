@@ -23,8 +23,10 @@ typedef enum Tools
 static cairo_surface_t *surface = NULL;
 
 // State Variables
-Tools tool = SELECT;
+Tools tool = DRAW;
 gdouble x1,y1;
+
+void deselect();
 
 /* Sets the whole surface to white */
 /*static void clear_surface (void)
@@ -54,30 +56,42 @@ void draw_background()
 
 void set_pen()
 {
+    deselect();
     tool = DRAW;
+}
+
+void set_select()
+{
+    tool = SELECT;
 }
 
 void set_eraser()
 {
+    deselect();
     tool = ERASER;
 }
 void set_fill()
 {
+    deselect();
     tool = FILL;
 }
 void set_line()
 {
+    deselect();
     tool = LINE;
 }
 void set_rectangle()
 {
+    deselect();
     tool = RECTANGLE;
 }
 
 void set_circle()
 {
+    deselect();
     tool = CIRCLE;
 }
+
 /* Create a new surface of the appropriate size to store our scribbles */
 static gboolean configure_event_cb (GtkWidget *widget, 
         GdkEventConfigure *event, gpointer data)
@@ -250,76 +264,238 @@ void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surf)
 // Selection
 
 SDLdata *sdldata;
-int sx1 = -1, sx2 = -1, sy1 = -1, sy2 = -1;
-int pixel_size;
+SDL_Rect select_pos;
+SDL_Rect selecttmp_pos;
+SDL_Rect clipboard_pos;
+
+// id of timeout function
 int id_to;
 
-void selection_press(int x, int y, int win_x, int win_y)
+void blit_selects()
+{
+    for (int i = 0; i < select_pos.w; i++)
+    {
+        for (int j = 0; j < select_pos.h; j++)
+        {
+            if (select_pos.x + i >= 0 && select_pos.y + j>= 0
+                    && select_pos.x + i < sdldata->width && select_pos.y + j < sdldata->width)
+            {
+                Uint32 pixel = get_pixel(sdldata->selecttmp, 
+                        selecttmp_pos.x + i, selecttmp_pos.y + j);
+                put_pixel(sdldata->select, select_pos.x + i, select_pos.y + j, pixel);
+            }
+        }
+    }
+}
+
+void cp_surf(SDL_Surface *src, SDL_Surface *dst)
+{
+    for (int i = 0; i < src->w; i++)
+    {
+        for (int j = 0; j < src->h; j++)
+        {
+            Uint32 pixel = get_pixel(src, i, j);
+            put_pixel(dst, i, j, pixel);
+            g_print("%x ", pixel);
+        }
+    }
+    
+}
+
+void deselect()
+{
+    if (select_pos.x != -1)
+    {
+        for (int i = select_pos.x; i < select_pos.y + select_pos.w; i++)
+        {
+            for (int j = select_pos.y; j < select_pos.y + select_pos.h; j++)
+            {
+                Uint32 pixel = get_pixel(sdldata->select, i, j);
+                if (pixel != 0)
+                {
+                    put_pixel(sdldata->current->img, i, j, pixel);
+                    put_pixel(sdldata->select, i, j, 0);
+                }
+            }
+        }
+    }
+    SDL_FillRect(sdldata->previs, NULL, 0);
+    SDL_FillRect(sdldata->selecttmp, NULL, 0);
+
+}
+
+void selection_press(int x, int y, int win_x, int win_y, GtkWidget *widget)
 {
     if (sdldata == NULL)
         sdldata = get_sdl_data();
-    x1 = x;
-    y1 = y;
-    // Nothing selected
-    if (sx1 == -1)
+
+    if (win_x < win_y)
     {
-        // Get pixel size
-        if (win_x < win_y)
-            pixel_size = win_x / sdldata->width;
-        else
-            pixel_size = win_y / sdldata->height;
+        select_pos.x = x * sdldata->width / (win_x - win_x % sdldata->width);
+        select_pos.y = y * sdldata->width / (win_x - win_x % sdldata->width);
     }
-    sx1 = x;
-    sy1 = y;
+    else
+    {
+        select_pos.x = x * sdldata->height / (win_y - win_y % sdldata->height);
+        select_pos.y = y * sdldata->height / (win_y - win_y % sdldata->height);
+    }
+    SDL_Surface *s = compress_frame(-1, 1);
+    redraw_surface((GtkDrawingArea *)widget, s);
 }
 
 void selection_motion(int x, int y, int win_x, int win_y, GtkWidget *widget)
 {
-    /*if (win_x < win_y)
-    {
-        rect.x = x - x % (win_x / sdl_data.width);
-        rect.y = y - y % (win_x / sdl_data.width);
-        if (x >= 0 && y >= 0 
-                && y < sdl_data.height * rect.height
-                && x < sdl_data.width * rect.width)
-        {
-        }
-    }
-    else
-    {
-        rect.x = x - x % (win_y / sdl_data.height);
-        rect.y = y - y % (win_y / sdl_data.height);
-        if (x >= 0 && y >= 0 
-                && y < sdl_data.height * rect.height
-                && x < sdl_data.width * rect.width)
-        {
-        }
-    }*/
-    //x * sdl_data.width / (win_x - win_x % sdl_data.width)
     SDL_Surface *s;
     if (win_x < win_y)
     {
         s = previs_select(
-            sx1 * sdldata->width / (win_x - win_x % sdldata->width),
-            sy1 * sdldata->width / (win_x - win_x % sdldata->width),
-            x * sdldata->width / (win_x - win_x % sdldata->width),
-            y * sdldata->width / (win_x - win_x % sdldata->width));
+                select_pos.x,
+                select_pos.y,
+                x * sdldata->width / (win_x - win_x % sdldata->width),
+                y * sdldata->width / (win_x - win_x % sdldata->width));
     }
     else
     {
         s = previs_select(
-            sx1 * sdldata->height / (win_y - win_y % sdldata->height),
-            sy1 * sdldata->height / (win_y - win_y % sdldata->height),
-            x * sdldata->height / (win_y - win_y % sdldata->height),
-            y * sdldata->height / (win_y - win_y % sdldata->height));
+                select_pos.x,
+                select_pos.y,
+                x * sdldata->height / (win_y - win_y % sdldata->height),
+                y * sdldata->height / (win_y - win_y % sdldata->height));
     }
-
     redraw_surface((GtkDrawingArea *)widget, s);
 }
 
-void selection_release(int x, int y)
+void selection_release(int x, int y, int win_x, int win_y)
 {
-    
+    if (x1 == x && y1 == y)
+    {
+        select_pos.x = -1;
+        select_pos.y = -1;
+        select_pos.w = -1;
+        select_pos.h = -1;
+        return;
+    }
+    int tmpx;
+    int tmpy;
+    if (win_x < win_y)
+    {
+        tmpx = x * sdldata->width / (win_x - win_x % sdldata->width);
+        tmpy = y * sdldata->width / (win_x - win_x % sdldata->width);
+    }
+    else
+    {
+        tmpx = x * sdldata->height / (win_y - win_y % sdldata->height);
+        tmpy = y * sdldata->height / (win_y - win_y % sdldata->height);
+    }
+    if (select_pos.x > tmpx)
+    {
+        int tmp = tmpx;
+        tmpx = select_pos.x;
+        select_pos.x = tmp;
+    }
+    if (select_pos.y > tmpy) 
+    {
+        int tmp = tmpy;
+        tmpy = select_pos.y;
+        select_pos.y = tmp;
+    }
+    if (select_pos.x >= sdldata->width || select_pos.y >= sdldata->height)
+    {
+        select_pos.x = -1;
+        select_pos.y = -1;
+        select_pos.w = -1;
+        select_pos.h = -1;
+        return;
+    }
+    select_pos.x = CLAMP(select_pos.x, 0, sdldata->width - 1);
+    select_pos.y = CLAMP(select_pos.y, 0, sdldata->height - 1);
+    tmpx = CLAMP(tmpx, 0, sdldata->width - 1);
+    tmpy = CLAMP(tmpy, 0, sdldata->height - 1);
+    select_pos.w = tmpx - select_pos.x;
+    select_pos.h = tmpy - select_pos.y;
+    for (int i = select_pos.x; i < tmpx; i++)
+    {
+        for (int j = select_pos.y; j < tmpy; j++)
+        {
+            Uint32 pixel = get_pixel(sdldata->current->img, i, j);
+            put_pixel(sdldata->select, i, j, pixel);
+            put_pixel(sdldata->selecttmp, i, j, pixel);
+            put_pixel(sdldata->current->img, i, j, 0);
+        }
+    }
+    selecttmp_pos.x = select_pos.x;
+    selecttmp_pos.y = select_pos.y;
+    selecttmp_pos.w = select_pos.w;
+    selecttmp_pos.h = select_pos.h;
+}
+
+int is_ctrl = 0;
+
+void move_select(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+{
+    (void) user_data;
+    (void) widget;
+    int moved = 0;
+    if (sdldata != NULL)
+    {
+        if (event->keyval == GDK_KEY_Up)
+        {
+            moved = 1;
+            select_pos.y -= 1;
+        }
+        else if (event->keyval == GDK_KEY_Down)
+        {
+            moved = 1;
+            select_pos.y += 1;
+        }
+        else if (event->keyval == GDK_KEY_Left)
+        {
+            moved = 1;
+            select_pos.x -= 1;
+        }
+        else if (event->keyval == GDK_KEY_Right)
+        {
+            moved = 1;
+            select_pos.x += 1;
+        }
+        else if (event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R)
+        {
+            is_ctrl = 1;
+        }
+        else if (is_ctrl)
+        {
+            if (event->keyval == GDK_KEY_c)
+            {
+                cp_surf(sdldata->select, sdldata->clipboard);
+                SDL_SaveBMP(sdldata->select, "cb.bmp");
+            }
+            else if (event->keyval == GDK_KEY_v)
+            {
+                deselect();
+                cp_surf(sdldata->clipboard, sdldata->select);
+                cp_surf(sdldata->clipboard, sdldata->selecttmp);
+                set_select();
+                SDL_Surface *s = compress_frame(-1, 1);
+                redraw_surface((GtkDrawingArea *)user_data, s);
+            }
+        }
+        if (moved)
+        {
+            SDL_FillRect(sdldata->select, NULL, 0);
+            blit_selects();
+            SDL_Surface *s = compress_frame(-1, 1);
+            redraw_surface((GtkDrawingArea *)user_data, s);
+        }
+        
+    }
+}
+
+void get_key_release(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+{
+    (void) widget;
+    (void) user_data;
+    if (event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R)
+        is_ctrl = 0;
 }
 
 
@@ -332,16 +508,18 @@ static gboolean button_press_event_cb (GtkWidget *widget,
 
     if (event->button == GDK_BUTTON_PRIMARY)
     {
-        x1 = event->x;
-        y1 = event->y;
         GdkRGBA* color = malloc(sizeof(GdkRGBA));
         gtk_color_chooser_get_rgba(data,color);
         switch(tool)
         {
             case DRAW:
+                x1 = event->x;
+                y1 = event->y;
                 draw_brush (widget, event->x, event->y, color);
                 break;
             case ERASER:
+                x1 = event->x;
+                y1 = event->y;
                 color->red = 0;
                 color->blue = 0;
                 color->green = 0;
@@ -349,6 +527,8 @@ static gboolean button_press_event_cb (GtkWidget *widget,
                 draw_brush (widget, event->x, event->y, color);
                 break;
             case FILL:
+                x1 = event->x;
+                y1 = event->y;
                 fill(event->x, event->y,
                         gtk_widget_get_allocated_width(widget),
                         gtk_widget_get_allocated_height(widget), color);
@@ -358,7 +538,7 @@ static gboolean button_press_event_cb (GtkWidget *widget,
             case SELECT:
                 selection_press(event->x, event->y,
                         gtk_widget_get_allocated_width(widget),
-                        gtk_widget_get_allocated_height(widget));
+                        gtk_widget_get_allocated_height(widget), widget);
                 break;
             default:
                 break;
@@ -465,6 +645,11 @@ static gboolean button_release_event_cb (GtkWidget *widget,
                 s = compress_frame(-1, 1);
                 redraw_surface((GtkDrawingArea *)widget, s);
                 break;
+            case SELECT:
+                selection_release(event->x, event->y,
+                        gtk_widget_get_allocated_width(widget),
+                        gtk_widget_get_allocated_height(widget));
+                break;
             default:
                 break;
         }
@@ -474,8 +659,9 @@ static gboolean button_release_event_cb (GtkWidget *widget,
     return TRUE;
 }
 // Setups the events for the drawing area
-void setup_drawing(GtkDrawingArea *drawing_area, GtkColorChooser *color_select)
+void setup_drawing(GtkDrawingArea *drawing_area, GtkColorChooser *color_select, GtkWindow *window)
 {
+    sdldata = get_sdl_data();
     //      Signals for drawing
     //      Drawing areas do not handle clicks, this add the events
     gtk_widget_add_events((GtkWidget *) drawing_area, GDK_BUTTON_PRESS_MASK
@@ -492,5 +678,7 @@ void setup_drawing(GtkDrawingArea *drawing_area, GtkColorChooser *color_select)
             G_CALLBACK (button_press_event_cb), color_select);
     g_signal_connect (drawing_area, "button-release-event",
             G_CALLBACK (button_release_event_cb), color_select);
+    g_signal_connect(window, "key_press_event", G_CALLBACK(move_select), drawing_area);
+    g_signal_connect(window, "key_release_event", G_CALLBACK(get_key_release), NULL);
     return;
 }

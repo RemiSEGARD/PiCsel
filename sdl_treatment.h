@@ -30,7 +30,7 @@ void prev_layer();
 void next_layer();
 void new_layer();
 
-Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y);
+Uint32 get_pixel(SDL_Surface *surface, int x, int y);
 
 void put_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
 

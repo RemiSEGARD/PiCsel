@@ -34,6 +34,7 @@ void on_quit()
 
 void choose_frame(GtkWidget* widget, gpointer data)
 {
+    deselect();
     (void) widget;
     select_layer(*((int *)data), sdl_dat->curlayer);
     SDL_Surface *surface = compress_frame(-1, 1);
@@ -53,6 +54,7 @@ void on_prev_frame()
 
 void on_next_frame()
 {
+    deselect();
     next_frame();
     SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
@@ -62,7 +64,7 @@ void on_next_frame()
 void on_new_frame(GtkWidget *widget, gpointer data)
 {
     (void) widget;
-    char label[10];
+    char label[15];
     sprintf(label, "%u", sdl_dat->nbframe + 1);
     GtkWidget *button = gtk_button_new_with_label(label);
     
@@ -122,7 +124,7 @@ void on_next_layer()
 void on_new_layer(GtkWidget *widget, gpointer data)
 {
     (void) widget;
-    char label[10];
+    char label[15];
     sprintf(label, "%u", sdl_dat->nblayer + 1);
     GtkWidget *button = gtk_button_new_with_label(label);
     
@@ -147,31 +149,50 @@ int h;
 void select_pen()
 {
     set_pen();
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
+}
+
+void select_select()
+{
+    set_select();
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
 }
 
 void select_eraser()
 {
     set_eraser();
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
 }
 
 void select_fill()
 {
     set_fill();
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
 }
 
 void select_line()
 {
     set_line();
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
 }
 
 void select_rectangle()
 {
     set_rectangle();
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
 }
 
 void select_circle()
 {
     set_circle();
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
 }
 
 guint id = 0;
@@ -260,7 +281,7 @@ void add_grid_buttons()
 
     if (sdl_dat != NULL)
     {
-        char label[10];
+        char label[15];
         GtkWidget *button;
         int *index;
         for (int i = 0; i < sdl_dat->nbframe - 1; i++)
@@ -317,9 +338,10 @@ void on_import(GtkWidget *widget, gpointer window)
         reset_grids();
         if (g_str_has_suffix(filename, ".picsel"))
         {
+            g_print("picsel");
             main_picsel_import(filename);
         }
-        if (g_str_has_suffix(filename, ".gif"))
+        else if (g_str_has_suffix(filename, ".gif"))
         {
             main_gif_import(filename);
         }
@@ -419,6 +441,7 @@ int main_ui(int x, int y, char *filename)
     GtkButton* line_button = GTK_BUTTON(gtk_builder_get_object(builder, "line"));
     GtkButton* rectangle_button = GTK_BUTTON(gtk_builder_get_object(builder, "rectangle"));
     GtkButton* circle_button = GTK_BUTTON(gtk_builder_get_object(builder, "circle"));
+    GtkButton* select_button = GTK_BUTTON(gtk_builder_get_object(builder, "select"));
 
     GtkButton* play_button = GTK_BUTTON(gtk_builder_get_object(builder, "play"));
 
@@ -499,6 +522,7 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(play_button, "clicked", G_CALLBACK(play_animation), NULL);
 
     g_signal_connect(pen_button, "clicked", G_CALLBACK(select_pen), NULL);
+    g_signal_connect(select_button, "clicked", G_CALLBACK(select_select), NULL);
     g_signal_connect(eraser_button, "clicked", G_CALLBACK(select_eraser), NULL);
     g_signal_connect(fill_button, "clicked", G_CALLBACK(select_fill), NULL);
     g_signal_connect(line_button, "clicked", G_CALLBACK(select_line), NULL);
@@ -506,7 +530,7 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(circle_button, "clicked", G_CALLBACK(select_circle), NULL);
 
     //      Drawing signals
-    setup_drawing(drawing_area, color_select);
+    setup_drawing(drawing_area, color_select, window);
 
     w = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
     h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
@@ -522,7 +546,6 @@ int main_ui(int x, int y, char *filename)
 
 
 
-    g_print("hey");
     //open_dialog(window);
     
     // Runs the main loop

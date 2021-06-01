@@ -118,8 +118,10 @@ static inline Uint8 *pixel_ref(SDL_Surface *surf, unsigned x, unsigned y)
     return (Uint8 *)surf->pixels + y * surf->pitch + x * bpp;
 }
 
-Uint32 get_pixel(SDL_Surface *surface, unsigned x, unsigned y)
+Uint32 get_pixel(SDL_Surface *surface, int x, int y)
 {
+    if (x < 0 || y < 0 || x >= surface->w || y >= surface->h)
+        return 0;
     // Function from epita prog S3 site
     Uint8 *p = pixel_ref(surface, x, y);
     switch (surface->format->BytesPerPixel)
@@ -217,6 +219,31 @@ Uint32 compress_pixel(Layer *lay, int x, int y)
             g = ((1 - a0) * a1 * g1 + a0 * g0) / a01 * 255;
             b = ((1 - a0) * a1 * b1 + a0 * b0) / a01 * 255;
             a = a01 * 255;
+            if (l == sdl_data.current)
+            {
+                Uint32 pixel = get_pixel(sdl_data.select, x, y);
+                Uint8 new_a;
+                Uint8 new_r;
+                Uint8 new_g;
+                Uint8 new_b;
+                SDL_GetRGBA(pixel, l->img->format,
+                        &new_r, &new_g, &new_b, &new_a);
+                double r1 = r, g1 = g, b1 = b, a1 = a;
+                double r0 = new_r, g0 = new_g, b0 = new_b, a0 = new_a;
+                r1 /= 255;
+                g1 /= 255;
+                b1 /= 255;
+                a1 /= 255;
+                r0 /= 255;
+                g0 /= 255;
+                b0 /= 255;
+                a0 /= 255;
+                Uint8 a01 = (1 - a0) * a1 + a0;
+                r = ((1 - a0) * a1 * r1 + a0 * r0) / a01 * 255;
+                g = ((1 - a0) * a1 * g1 + a0 * g0) / a01 * 255;
+                b = ((1 - a0) * a1 * b1 + a0 * b0) / a01 * 255;
+                a = a01 * 255;
+            }
         }
         l = l->next;
     }
@@ -253,6 +280,7 @@ void import_img(char *file)
 void export_current_frame(char *filename)
 {
     SDL_Surface *c = compress_frame(sdl_data.curframe, 0);
+    
     if (g_str_has_suffix(filename, ".picsel"))
         export_picsel(filename, &sdl_data);
     else if (g_str_has_suffix(filename, ".bmp"))
@@ -845,8 +873,6 @@ SDL_Surface *previs_select(int x1, int y1, int x2,int y2)
     rect.y = y1;
     rect.w = x2 - x1;
     rect.h = y2 - y1;
-    g_print("%u %u %u %u\n", x1, y1, x2, y2);
-    //g_print("%u %u %u %u | ", rect.x, rect.y, rect.w, rect.h);
     SDL_FillRect(sdl_data.previs, &rect, 0x50505050);
     SDL_Surface *compressed = compress_frame(-1, 1);
 
@@ -962,7 +988,6 @@ void main_sdl(int width, int height)
     // Creates a new SDL_Surface
     // SDL_Surface* image_surface = SDL_CreateRGBSurface(0, width, height, 32,
     //        0, 0, 0, 0);
-    // TODO
     sdl_data.width = width;
     sdl_data.height = height;
     sdl_data.frames = init_frame(width, height);
@@ -994,23 +1019,12 @@ void main_sdl(int width, int height)
                                    rmask, gmask, bmask, amask);
     sdl_data.clipboard = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
                                    rmask, gmask, bmask, amask);
+    sdl_data.selecttmp = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
+                                   rmask, gmask, bmask, amask);
     if (sdl_data.previs == NULL) {
         errx(1, "SDL_CreateRGBSurface() failed");
     }
     SDL_FillRect(sdl_data.previs, NULL, 0x00000000);
-
-
-    //circle(10,10,5);
-    // import given file
-    // draw given file
-    //put_pixel(sdl_data.current->img, 0, 0, SDL_MapRGBA(sdl_data.current->img->format, 100, 100, 100, 255));
-    //printf("%lu hi\n", sdl_data.current->img);
-    //printf("hi\n");
-    // display
-    //init_sdl();
-    //SDL_Surface* screen_surface = display_image(sdl_data.current->img);
-    //wait_for_keypressed();
-    //SDL_FreeSurface(screen_surface);
 
 }
 
@@ -1047,6 +1061,8 @@ void main_picsel_import(char *filename)
     sdl_data.select = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
                                    rmask, gmask, bmask, amask);
     sdl_data.clipboard = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
+                                   rmask, gmask, bmask, amask);
+    sdl_data.selecttmp = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
                                    rmask, gmask, bmask, amask);
     if (sdl_data.previs == NULL) {
         errx(1, "SDL_CreateRGBSurface() failed");
@@ -1091,6 +1107,8 @@ void main_gif_import(char *filename)
     sdl_data.select = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
                                    rmask, gmask, bmask, amask);
     sdl_data.clipboard = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
+                                   rmask, gmask, bmask, amask);
+    sdl_data.selecttmp = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
                                    rmask, gmask, bmask, amask);
     if (sdl_data.previs == NULL) {
         errx(1, "SDL_CreateRGBSurface() failed");
@@ -1140,6 +1158,8 @@ void main_sdl_import(char *filename)
     sdl_data.select = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
                                    rmask, gmask, bmask, amask);
     sdl_data.clipboard = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
+                                   rmask, gmask, bmask, amask);
+    sdl_data.selecttmp = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
                                    rmask, gmask, bmask, amask);
     if (sdl_data.previs == NULL) {
         errx(1, "SDL_CreateRGBSurface() failed");

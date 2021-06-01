@@ -16,6 +16,7 @@ typedef struct SDL_data
     Layer *current;
     SDL_Surface *previs;
     SDL_Surface *select;
+    SDL_Surface *selecttmp;
     SDL_Surface *clipboard;
     int nblayer;
     int nbframe;

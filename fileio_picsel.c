@@ -68,6 +68,7 @@ void export_picsel(char *filename, SDLdata *sdl_data)
     FILE *f = fopen(filename, "w");
     fprintf(f, "%u\n%u\n%u\n%u\n", sdl_data->width, sdl_data->height,
             sdl_data->nbframe, sdl_data->nblayer);
+    printf("%u %u \n", sdl_data->nbframe, sdl_data->nblayer);
     Frame *frame = sdl_data->frames->next;
     while (frame != NULL)
     {
