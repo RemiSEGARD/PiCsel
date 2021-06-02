@@ -32,96 +32,58 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <child>
-              <object class="GtkMenuItem">
+              <object class="GtkImageMenuItem" id="open-item">
+                <property name="label">gtk-open</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">_File</property>
                 <property name="use-underline">True</property>
+                <property name="use-stock">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem" id="save-button">
+                <property name="label">gtk-save</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="use-underline">True</property>
+                <property name="use-stock">True</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkImageMenuItem">
+                <property name="label" translatable="yes">Export</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="use-stock">False</property>
                 <child type="submenu">
                   <object class="GtkMenu">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-new</property>
+                      <object class="GtkImageMenuItem" id="export-button-img">
+                        <property name="label" translatable="yes">Export current image</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="use-underline">True</property>
-                        <property name="use-stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem" id="open-item">
-                        <property name="label">gtk-open</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="use-underline">True</property>
-                        <property name="use-stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem" id="save-button">
-                        <property name="label">gtk-save</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="use-underline">True</property>
-                        <property name="use-stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label" translatable="yes">Export</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
+                        <property name="image">image3</property>
                         <property name="use-stock">False</property>
-                        <child type="submenu">
-                          <object class="GtkMenu">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <child>
-                              <object class="GtkImageMenuItem" id="export-button-img">
-                                <property name="label" translatable="yes">Export current image</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="image">image3</property>
-                                <property name="use-stock">False</property>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkImageMenuItem" id="export-button-gif">
-                                <property name="label" translatable="yes">Export GIF</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="image">image2</property>
-                                <property name="use-stock">False</property>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkImageMenuItem" id="export-button-ss">
-                                <property name="label" translatable="yes">Export Spritesheet</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="image">image1</property>
-                                <property name="use-stock">False</property>
-                              </object>
-                            </child>
-                          </object>
-                        </child>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkSeparatorMenuItem">
+                      <object class="GtkImageMenuItem" id="export-button-gif">
+                        <property name="label" translatable="yes">Export GIF</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="image">image2</property>
+                        <property name="use-stock">False</property>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-quit</property>
+                      <object class="GtkImageMenuItem" id="export-button-ss">
+                        <property name="label" translatable="yes">Export Spritesheet</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="use-underline">True</property>
-                        <property name="use-stock">True</property>
+                        <property name="image">image1</property>
+                        <property name="use-stock">False</property>
                       </object>
                     </child>
                   </object>
@@ -129,84 +91,18 @@
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem">
+              <object class="GtkSeparatorMenuItem">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">_Edit</property>
-                <property name="use-underline">True</property>
-                <child type="submenu">
-                  <object class="GtkMenu">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-cut</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="use-underline">True</property>
-                        <property name="use-stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-copy</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="use-underline">True</property>
-                        <property name="use-stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-paste</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="use-underline">True</property>
-                        <property name="use-stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-delete</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="use-underline">True</property>
-                        <property name="use-stock">True</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem">
+              <object class="GtkImageMenuItem" id="quit_button">
+                <property name="label">gtk-quit</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">_View</property>
                 <property name="use-underline">True</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="label" translatable="yes">_Help</property>
-                <property name="use-underline">True</property>
-                <child type="submenu">
-                  <object class="GtkMenu">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-about</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="use-underline">True</property>
-                        <property name="use-stock">True</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
+                <property name="use-stock">True</property>
               </object>
             </child>
           </object>

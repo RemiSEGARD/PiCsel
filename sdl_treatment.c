@@ -312,7 +312,6 @@ void export_sprite(char *filename)
     while (list != NULL)
     {
         SDL_Surface *cur = compress_frame(list->index,0);
-        g_print("%d\n",list->index);
         for (int i = 0; i < sdl_data.width; i++)
         {
             for (int j = 0; j < sdl_data.height; j++)
@@ -1137,7 +1136,6 @@ void main_sdl_import(char *filename)
     
     Uint32 rmask, gmask, bmask, amask;
     
-    g_print("%p", sdl_data.frames->next->layer->next);
 
     /* SDL interprets each pixel as a 32-bit number, so our masks must depend
        on the endianness (byte order) of the machine */

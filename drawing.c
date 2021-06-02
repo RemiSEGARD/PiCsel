@@ -28,6 +28,7 @@ gdouble x1,y1;
 
 void deselect();
 
+GtkColorChooser *colorselect;
 /* Sets the whole surface to white */
 /*static void clear_surface (void)
 {
@@ -269,7 +270,31 @@ SDL_Rect selecttmp_pos;
 SDL_Rect clipboard_pos;
 
 // id of timeout function
-int id_to;
+int id_to = 0;
+int is_glow = 0;
+
+void draw_glow(gpointer data)
+{
+        SDL_Surface *s = previs_select(select_pos.x, select_pos.y, select_pos.x + select_pos.w,
+                select_pos.y + select_pos.h);
+        is_glow = 1;
+        redraw_surface((GtkDrawingArea *)data, s);
+}
+
+gboolean glow(gpointer data)
+{
+    if (!is_glow)
+    {
+        draw_glow(data);
+    }
+    else
+    {
+        SDL_Surface *s = compress_frame(-1, 1);
+        redraw_surface((GtkDrawingArea *)data, s);    
+        is_glow = 0;
+    }
+    return TRUE;
+}
 
 void blit_selects()
 {
@@ -296,7 +321,6 @@ void cp_surf(SDL_Surface *src, SDL_Surface *dst)
         {
             Uint32 pixel = get_pixel(src, i, j);
             put_pixel(dst, i, j, pixel);
-            g_print("%x ", pixel);
         }
     }
     
@@ -306,7 +330,7 @@ void deselect()
 {
     if (select_pos.x != -1)
     {
-        for (int i = select_pos.x; i < select_pos.y + select_pos.w; i++)
+        for (int i = select_pos.x; i < select_pos.x + select_pos.w; i++)
         {
             for (int j = select_pos.y; j < select_pos.y + select_pos.h; j++)
             {
@@ -321,6 +345,11 @@ void deselect()
     }
     SDL_FillRect(sdldata->previs, NULL, 0);
     SDL_FillRect(sdldata->selecttmp, NULL, 0);
+    if (id_to != 0)
+    {
+        g_source_remove(id_to);
+        id_to = 0;
+    }
 
 }
 
@@ -328,6 +357,7 @@ void selection_press(int x, int y, int win_x, int win_y, GtkWidget *widget)
 {
     if (sdldata == NULL)
         sdldata = get_sdl_data();
+    deselect();
 
     if (win_x < win_y)
     {
@@ -365,7 +395,7 @@ void selection_motion(int x, int y, int win_x, int win_y, GtkWidget *widget)
     redraw_surface((GtkDrawingArea *)widget, s);
 }
 
-void selection_release(int x, int y, int win_x, int win_y)
+void selection_release(int x, int y, int win_x, int win_y, GtkWidget *darea)
 {
     if (x1 == x && y1 == y)
     {
@@ -409,8 +439,8 @@ void selection_release(int x, int y, int win_x, int win_y)
     }
     select_pos.x = CLAMP(select_pos.x, 0, sdldata->width - 1);
     select_pos.y = CLAMP(select_pos.y, 0, sdldata->height - 1);
-    tmpx = CLAMP(tmpx, 0, sdldata->width - 1);
-    tmpy = CLAMP(tmpy, 0, sdldata->height - 1);
+    tmpx = CLAMP(tmpx, 0, sdldata->width);
+    tmpy = CLAMP(tmpy, 0, sdldata->height);
     select_pos.w = tmpx - select_pos.x;
     select_pos.h = tmpy - select_pos.y;
     for (int i = select_pos.x; i < tmpx; i++)
@@ -427,6 +457,7 @@ void selection_release(int x, int y, int win_x, int win_y)
     selecttmp_pos.y = select_pos.y;
     selecttmp_pos.w = select_pos.w;
     selecttmp_pos.h = select_pos.h;
+    id_to = g_timeout_add(500, glow, darea);
 }
 
 int is_ctrl = 0;
@@ -462,12 +493,61 @@ void move_select(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
         {
             is_ctrl = 1;
         }
+        else if (event->keyval == GDK_KEY_Delete)
+        {
+            SDL_FillRect(sdldata->select, NULL, 0);
+            SDL_FillRect(sdldata->selecttmp, NULL, 0);
+            deselect();
+            SDL_Surface *s = compress_frame(-1, 1);
+            redraw_surface((GtkDrawingArea *)user_data, s);
+        }
         else if (is_ctrl)
         {
             if (event->keyval == GDK_KEY_c)
             {
                 cp_surf(sdldata->select, sdldata->clipboard);
-                SDL_SaveBMP(sdldata->select, "cb.bmp");
+                clipboard_pos.x = select_pos.x;
+                clipboard_pos.y = select_pos.y;
+                clipboard_pos.w = select_pos.w;
+                clipboard_pos.h = select_pos.h;
+            }
+            else if (event->keyval == GDK_KEY_x)
+            {
+                cp_surf(sdldata->select, sdldata->clipboard);
+                clipboard_pos.x = select_pos.x;
+                clipboard_pos.y = select_pos.y;
+                clipboard_pos.w = select_pos.w;
+                clipboard_pos.h = select_pos.h;
+                SDL_FillRect(sdldata->select, NULL, 0);
+                SDL_FillRect(sdldata->selecttmp, NULL, 0);
+                deselect();
+                SDL_Surface *s = compress_frame(-1, 1);
+                redraw_surface((GtkDrawingArea *)user_data, s);
+            }
+            else if (event->keyval == GDK_KEY_a)
+            {
+                select_pos.x = 0;
+                select_pos.y = 0;
+                select_pos.w = sdldata->width;
+                select_pos.h = sdldata->height;
+                for (int i = select_pos.x; i < sdldata->width; i++)
+                {
+                    for (int j = select_pos.y; j < sdldata->height; j++)
+                    {
+                        Uint32 pixel = get_pixel(sdldata->current->img, i, j);
+                        put_pixel(sdldata->select, i, j, pixel);
+                        put_pixel(sdldata->selecttmp, i, j, pixel);
+                        put_pixel(sdldata->current->img, i, j, 0);
+                    }
+                }
+                selecttmp_pos.x = select_pos.x;
+                selecttmp_pos.y = select_pos.y;
+                selecttmp_pos.w = select_pos.w;
+                selecttmp_pos.h = select_pos.h;
+                if (id_to != 0)
+                    g_source_remove(id_to);
+                id_to = g_timeout_add(500, glow, user_data);
+                draw_glow(user_data);
             }
             else if (event->keyval == GDK_KEY_v)
             {
@@ -475,8 +555,17 @@ void move_select(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
                 cp_surf(sdldata->clipboard, sdldata->select);
                 cp_surf(sdldata->clipboard, sdldata->selecttmp);
                 set_select();
-                SDL_Surface *s = compress_frame(-1, 1);
-                redraw_surface((GtkDrawingArea *)user_data, s);
+                select_pos.x = clipboard_pos.x;
+                select_pos.y = clipboard_pos.y;
+                select_pos.w = clipboard_pos.w;
+                select_pos.h = clipboard_pos.h;
+                selecttmp_pos.x = clipboard_pos.x;
+                selecttmp_pos.y = clipboard_pos.y;
+                selecttmp_pos.w = clipboard_pos.w;
+                selecttmp_pos.h = clipboard_pos.h;
+                id_to = g_timeout_add(500, glow, user_data);
+                draw_glow(user_data);
+                gtk_widget_set_sensitive((GtkWidget *)colorselect, FALSE);
             }
         }
         if (moved)
@@ -485,6 +574,13 @@ void move_select(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
             blit_selects();
             SDL_Surface *s = compress_frame(-1, 1);
             redraw_surface((GtkDrawingArea *)user_data, s);
+            if (id_to != 0)
+            {
+                g_source_remove(id_to);
+                id_to = 0;
+            }
+            id_to = g_timeout_add(500, glow, user_data);
+            draw_glow(user_data);
         }
         
     }
@@ -541,6 +637,8 @@ static gboolean button_press_event_cb (GtkWidget *widget,
                         gtk_widget_get_allocated_height(widget), widget);
                 break;
             default:
+                x1 = event->x;
+                y1 = event->y;
                 break;
         }
         free(color);
@@ -648,7 +746,7 @@ static gboolean button_release_event_cb (GtkWidget *widget,
             case SELECT:
                 selection_release(event->x, event->y,
                         gtk_widget_get_allocated_width(widget),
-                        gtk_widget_get_allocated_height(widget));
+                        gtk_widget_get_allocated_height(widget), widget);
                 break;
             default:
                 break;
@@ -680,5 +778,6 @@ void setup_drawing(GtkDrawingArea *drawing_area, GtkColorChooser *color_select, 
             G_CALLBACK (button_release_event_cb), color_select);
     g_signal_connect(window, "key_press_event", G_CALLBACK(move_select), drawing_area);
     g_signal_connect(window, "key_release_event", G_CALLBACK(get_key_release), NULL);
+    colorselect = color_select;
     return;
 }

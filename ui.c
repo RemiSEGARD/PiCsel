@@ -146,50 +146,65 @@ void on_new_layer(GtkWidget *widget, gpointer data)
 int w;
 int h;
 
-void select_pen()
+void select_pen(GtkWidget *widget, gpointer data)
 {
+    gtk_widget_set_sensitive(data, TRUE);
+    (void) widget;
     set_pen();
     SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
 }
 
-void select_select()
+void select_select(GtkWidget *widget, gpointer data)
 {
+    gtk_widget_set_sensitive(data, FALSE);
+    (void) widget;
     set_select();
     SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
 }
 
-void select_eraser()
+
+void select_eraser(GtkWidget *widget, gpointer data)
 {
+    gtk_widget_set_sensitive(data, TRUE);
+    (void) widget;
     set_eraser();
     SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
 }
 
-void select_fill()
+void select_fill(GtkWidget *widget, gpointer data)
 {
+    gtk_widget_set_sensitive(data, TRUE);
+    (void) widget;
     set_fill();
     SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
 }
 
-void select_line()
+void select_line(GtkWidget *widget, gpointer data)
 {
+    gtk_widget_set_sensitive(data, TRUE);
+    (void) widget;
     set_line();
     SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
 }
 
-void select_rectangle()
+void select_rectangle(GtkWidget *widget, gpointer data)
 {
+    gtk_widget_set_sensitive(data, TRUE);
+    (void) widget;
     set_rectangle();
     SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
 }
 
-void select_circle()
+void select_circle(GtkWidget *widget, gpointer data)
 {
+    gtk_widget_set_sensitive(data, TRUE);
+    (void) widget;
     set_circle();
     SDL_Surface *surface = compress_frame(-1, 1);
     redraw_surface(darea, surface);
@@ -332,13 +347,13 @@ void reset_grids()
 void on_import(GtkWidget *widget, gpointer window)
 {
     (void)widget;
+    draw_background();
 	char* filename = open_dialog(window);
     if(filename)
     {
         reset_grids();
         if (g_str_has_suffix(filename, ".picsel"))
         {
-            g_print("picsel");
             main_picsel_import(filename);
         }
         else if (g_str_has_suffix(filename, ".gif"))
@@ -470,6 +485,9 @@ int main_ui(int x, int y, char *filename)
     // Connects signal handlers
     //      Closing signal
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    GtkMenuItem* quit_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "quit_button"));
+    g_signal_connect(quit_button, "activate", G_CALLBACK(gtk_main_quit), NULL);
+    
 
     // MenuBar Signal
     //gtk_menu_item_activate(export_button);
@@ -521,13 +539,13 @@ int main_ui(int x, int y, char *filename)
     // tools signal
     g_signal_connect(play_button, "clicked", G_CALLBACK(play_animation), NULL);
 
-    g_signal_connect(pen_button, "clicked", G_CALLBACK(select_pen), NULL);
-    g_signal_connect(select_button, "clicked", G_CALLBACK(select_select), NULL);
-    g_signal_connect(eraser_button, "clicked", G_CALLBACK(select_eraser), NULL);
-    g_signal_connect(fill_button, "clicked", G_CALLBACK(select_fill), NULL);
-    g_signal_connect(line_button, "clicked", G_CALLBACK(select_line), NULL);
-    g_signal_connect(rectangle_button, "clicked", G_CALLBACK(select_rectangle), NULL);
-    g_signal_connect(circle_button, "clicked", G_CALLBACK(select_circle), NULL);
+    g_signal_connect(pen_button, "clicked", G_CALLBACK(select_pen), color_select);
+    g_signal_connect(select_button, "clicked", G_CALLBACK(select_select), color_select);
+    g_signal_connect(eraser_button, "clicked", G_CALLBACK(select_eraser), color_select);
+    g_signal_connect(fill_button, "clicked", G_CALLBACK(select_fill), color_select);
+    g_signal_connect(line_button, "clicked", G_CALLBACK(select_line), color_select);
+    g_signal_connect(rectangle_button, "clicked", G_CALLBACK(select_rectangle), color_select);
+    g_signal_connect(circle_button, "clicked", G_CALLBACK(select_circle), color_select);
 
     //      Drawing signals
     setup_drawing(drawing_area, color_select, window);
@@ -543,7 +561,6 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(export_button_sprite, "activate", G_CALLBACK(on_export_sprite), window);
     g_signal_connect(export_button_gif, "activate", G_CALLBACK(on_export_gif), window);
     g_signal_connect(open_item, "activate", G_CALLBACK(on_import), window);
-
 
 
     //open_dialog(window);
