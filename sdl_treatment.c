@@ -354,7 +354,7 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y, GdkRGBA* color)
         rect.height = 0;
         return rect;
     }
-    if (win_x < win_y)
+    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
     {
         rect.x = x - x % (win_x / sdl_data.width);
         rect.y = y - y % (win_x / sdl_data.width);
@@ -418,7 +418,7 @@ void fill(int x, int y, int win_x, int win_y, GdkRGBA* color)
     // prepares everything for the actual fill function
     if (sdl_data.current->shown == 0 ) return;
     // calculate the new coordinates
-    if (win_x < win_y)
+    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
     {
         x = x * sdl_data.width / (win_x - win_x % sdl_data.width);
         y = y * sdl_data.width / (win_x - win_x % sdl_data.width);
@@ -475,7 +475,7 @@ void fill_sdl(int x, int y, GdkRGBA* color, Uint32 match)
 void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
 {
     // Draws the line from (x1,y1) to (x2,y2) onthe SDL_Surface
-    if (win_x < win_y)
+    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
     {
         x1 = x1 * sdl_data.width / (win_x - win_x % sdl_data.width);
         y1 = y1 * sdl_data.width / (win_x - win_x % sdl_data.width);
@@ -663,7 +663,7 @@ void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* co
 {
     // Draws a rectangle from (x1,y1) to (x2,y2) on the SDL_Surface
     // Calculate the new coordinates
-    if (win_x < win_y)
+    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
     {
         x1 = x1 * sdl_data.width / (win_x - win_x % sdl_data.width);
         y1 = y1 * sdl_data.width / (win_x - win_x % sdl_data.width);
@@ -768,7 +768,7 @@ void circle(int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
     // draws a circle "between" the coordonates (x1,y1) and (x2,y2)
 
     // Calculate the new coordinates
-    if (win_x < win_y)
+    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
     {
         x1 = x1 * sdl_data.width / (win_x - win_x % sdl_data.width);
         y1 = y1 * sdl_data.width / (win_x - win_x % sdl_data.width);
@@ -949,7 +949,7 @@ SDL_Surface *previsualisation(void (*fun) (int, int, int, int, int, int, GdkRGBA
 
 GdkRGBA* eyedropper(int x, int y, int win_x, int win_y)
 {
-    if (win_x < win_y)
+    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
     {
         x = x * sdl_data.width / (win_x - win_x % sdl_data.width);
         y = y * sdl_data.width / (win_x - win_x % sdl_data.width);

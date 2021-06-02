@@ -179,7 +179,7 @@ static void draw_pixel (GtkWidget *widget, int x, int y, SDL_Surface *s)
     int w = gtk_widget_get_allocated_width(widget);
     int h = gtk_widget_get_allocated_height(widget);
     int pixel_size;
-    if (w < h)
+    if ((double)(s->w) / w > (double)(s->h) / h)
         pixel_size = w / s->w;
     else
         pixel_size = h / s->h;
@@ -220,7 +220,7 @@ void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surf)
     int w = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
     int h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
     int pixel_size;
-    if (w < h)
+    if ((double)(surf->w) / w > (double)(surf->h) / h)
         pixel_size = w / surf->w;
     else
         pixel_size = h / surf->h;
@@ -359,7 +359,7 @@ void selection_press(int x, int y, int win_x, int win_y, GtkWidget *widget)
         sdldata = get_sdl_data();
     deselect();
 
-    if (win_x < win_y)
+    if ((double)(sdldata->width) / win_x > (double)(sdldata->height) / win_y)
     {
         select_pos.x = x * sdldata->width / (win_x - win_x % sdldata->width);
         select_pos.y = y * sdldata->width / (win_x - win_x % sdldata->width);
@@ -376,7 +376,7 @@ void selection_press(int x, int y, int win_x, int win_y, GtkWidget *widget)
 void selection_motion(int x, int y, int win_x, int win_y, GtkWidget *widget)
 {
     SDL_Surface *s;
-    if (win_x < win_y)
+    if ((double)(sdldata->width) / win_x > (double)(sdldata->height) / win_y)
     {
         s = previs_select(
                 select_pos.x,
@@ -407,7 +407,7 @@ void selection_release(int x, int y, int win_x, int win_y, GtkWidget *darea)
     }
     int tmpx;
     int tmpy;
-    if (win_x < win_y)
+    if ((double)(sdldata->width) / win_x > (double)(sdldata->height) / win_y)
     {
         tmpx = x * sdldata->width / (win_x - win_x % sdldata->width);
         tmpy = y * sdldata->width / (win_x - win_x % sdldata->width);
