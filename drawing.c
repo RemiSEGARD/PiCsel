@@ -549,6 +549,7 @@ void move_select(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
                     g_source_remove(id_to);
                 id_to = g_timeout_add(500, glow, user_data);
                 draw_glow(user_data);
+                gtk_widget_set_sensitive((GtkWidget *)colorselect, FALSE);
             }
             else if (event->keyval == GDK_KEY_v)
             {
