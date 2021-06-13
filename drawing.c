@@ -526,6 +526,7 @@ void move_select(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
             }
             else if (event->keyval == GDK_KEY_a)
             {
+                set_select();
                 select_pos.x = 0;
                 select_pos.y = 0;
                 select_pos.w = sdldata->width;
