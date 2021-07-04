@@ -23,6 +23,8 @@ typedef struct SDL_data
 } SDLdata;
 */
 
+struct SDL_data sdl_data;
+
 void prev_frame();
 void next_frame();
 void new_frame();

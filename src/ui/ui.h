@@ -1,6 +1,9 @@
 #ifndef UI_H
 #define UI_H
 
+#include <gtk/gtk.h>
+
+GtkDrawingArea *darea;
 
 int main_ui(int x, int y, char *filename);
 
