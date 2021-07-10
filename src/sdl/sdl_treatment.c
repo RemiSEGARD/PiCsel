@@ -977,11 +977,6 @@ GdkRGBA* eyedropper(int x, int y, int win_x, int win_y)
     return color;
 }
 
-struct SDL_data* get_sdl_data()
-{
-    return &sdl_data;
-}
-
 void main_sdl(int width, int height)
 {
     // Creates a new SDL_Surface

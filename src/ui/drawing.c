@@ -264,7 +264,6 @@ void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surf)
 
 // Selection
 
-SDLdata *sdldata;
 SDL_Rect select_pos;
 SDL_Rect selecttmp_pos;
 SDL_Rect clipboard_pos;
@@ -303,11 +302,11 @@ void blit_selects()
         for (int j = 0; j < select_pos.h; j++)
         {
             if (select_pos.x + i >= 0 && select_pos.y + j>= 0
-                    && select_pos.x + i < sdldata->width && select_pos.y + j < sdldata->width)
+                    && select_pos.x + i < sdl_data.width && select_pos.y + j < sdl_data.width)
             {
-                Uint32 pixel = get_pixel(sdldata->selecttmp, 
+                Uint32 pixel = get_pixel(sdl_data.selecttmp, 
                         selecttmp_pos.x + i, selecttmp_pos.y + j);
-                put_pixel(sdldata->select, select_pos.x + i, select_pos.y + j, pixel);
+                put_pixel(sdl_data.select, select_pos.x + i, select_pos.y + j, pixel);
             }
         }
     }
@@ -334,17 +333,17 @@ void deselect()
         {
             for (int j = select_pos.y; j < select_pos.y + select_pos.h; j++)
             {
-                Uint32 pixel = get_pixel(sdldata->select, i, j);
+                Uint32 pixel = get_pixel(sdl_data.select, i, j);
                 if (pixel != 0)
                 {
-                    put_pixel(sdldata->current->img, i, j, pixel);
-                    put_pixel(sdldata->select, i, j, 0);
+                    put_pixel(sdl_data.current->img, i, j, pixel);
+                    put_pixel(sdl_data.select, i, j, 0);
                 }
             }
         }
     }
-    SDL_FillRect(sdldata->previs, NULL, 0);
-    SDL_FillRect(sdldata->selecttmp, NULL, 0);
+    SDL_FillRect(sdl_data.previs, NULL, 0);
+    SDL_FillRect(sdl_data.selecttmp, NULL, 0);
     if (id_to != 0)
     {
         g_source_remove(id_to);
@@ -355,19 +354,17 @@ void deselect()
 
 void selection_press(int x, int y, int win_x, int win_y, GtkWidget *widget)
 {
-    if (sdldata == NULL)
-        sdldata = get_sdl_data();
     deselect();
 
-    if ((double)(sdldata->width) / win_x > (double)(sdldata->height) / win_y)
+    if ((double)(sdl_data.width) / win_x > (double)(sdl_data.height) / win_y)
     {
-        select_pos.x = x * sdldata->width / (win_x - win_x % sdldata->width);
-        select_pos.y = y * sdldata->width / (win_x - win_x % sdldata->width);
+        select_pos.x = x * sdl_data.width / (win_x - win_x % sdl_data.width);
+        select_pos.y = y * sdl_data.width / (win_x - win_x % sdl_data.width);
     }
     else
     {
-        select_pos.x = x * sdldata->height / (win_y - win_y % sdldata->height);
-        select_pos.y = y * sdldata->height / (win_y - win_y % sdldata->height);
+        select_pos.x = x * sdl_data.height / (win_y - win_y % sdl_data.height);
+        select_pos.y = y * sdl_data.height / (win_y - win_y % sdl_data.height);
     }
     SDL_Surface *s = compress_frame(-1, 1);
     redraw_surface((GtkDrawingArea *)widget, s);
@@ -376,21 +373,21 @@ void selection_press(int x, int y, int win_x, int win_y, GtkWidget *widget)
 void selection_motion(int x, int y, int win_x, int win_y, GtkWidget *widget)
 {
     SDL_Surface *s;
-    if ((double)(sdldata->width) / win_x > (double)(sdldata->height) / win_y)
+    if ((double)(sdl_data.width) / win_x > (double)(sdl_data.height) / win_y)
     {
         s = previs_select(
                 select_pos.x,
                 select_pos.y,
-                x * sdldata->width / (win_x - win_x % sdldata->width),
-                y * sdldata->width / (win_x - win_x % sdldata->width));
+                x * sdl_data.width / (win_x - win_x % sdl_data.width),
+                y * sdl_data.width / (win_x - win_x % sdl_data.width));
     }
     else
     {
         s = previs_select(
                 select_pos.x,
                 select_pos.y,
-                x * sdldata->height / (win_y - win_y % sdldata->height),
-                y * sdldata->height / (win_y - win_y % sdldata->height));
+                x * sdl_data.height / (win_y - win_y % sdl_data.height),
+                y * sdl_data.height / (win_y - win_y % sdl_data.height));
     }
     redraw_surface((GtkDrawingArea *)widget, s);
 }
@@ -407,15 +404,15 @@ void selection_release(int x, int y, int win_x, int win_y, GtkWidget *darea)
     }
     int tmpx;
     int tmpy;
-    if ((double)(sdldata->width) / win_x > (double)(sdldata->height) / win_y)
+    if ((double)(sdl_data.width) / win_x > (double)(sdl_data.height) / win_y)
     {
-        tmpx = x * sdldata->width / (win_x - win_x % sdldata->width);
-        tmpy = y * sdldata->width / (win_x - win_x % sdldata->width);
+        tmpx = x * sdl_data.width / (win_x - win_x % sdl_data.width);
+        tmpy = y * sdl_data.width / (win_x - win_x % sdl_data.width);
     }
     else
     {
-        tmpx = x * sdldata->height / (win_y - win_y % sdldata->height);
-        tmpy = y * sdldata->height / (win_y - win_y % sdldata->height);
+        tmpx = x * sdl_data.height / (win_y - win_y % sdl_data.height);
+        tmpy = y * sdl_data.height / (win_y - win_y % sdl_data.height);
     }
     if (select_pos.x > tmpx)
     {
@@ -429,7 +426,7 @@ void selection_release(int x, int y, int win_x, int win_y, GtkWidget *darea)
         tmpy = select_pos.y;
         select_pos.y = tmp;
     }
-    if (select_pos.x >= sdldata->width || select_pos.y >= sdldata->height)
+    if (select_pos.x >= sdl_data.width || select_pos.y >= sdl_data.height)
     {
         select_pos.x = -1;
         select_pos.y = -1;
@@ -437,20 +434,20 @@ void selection_release(int x, int y, int win_x, int win_y, GtkWidget *darea)
         select_pos.h = -1;
         return;
     }
-    select_pos.x = CLAMP(select_pos.x, 0, sdldata->width - 1);
-    select_pos.y = CLAMP(select_pos.y, 0, sdldata->height - 1);
-    tmpx = CLAMP(tmpx, 0, sdldata->width);
-    tmpy = CLAMP(tmpy, 0, sdldata->height);
+    select_pos.x = CLAMP(select_pos.x, 0, sdl_data.width - 1);
+    select_pos.y = CLAMP(select_pos.y, 0, sdl_data.height - 1);
+    tmpx = CLAMP(tmpx, 0, sdl_data.width);
+    tmpy = CLAMP(tmpy, 0, sdl_data.height);
     select_pos.w = tmpx - select_pos.x;
     select_pos.h = tmpy - select_pos.y;
     for (int i = select_pos.x; i < tmpx; i++)
     {
         for (int j = select_pos.y; j < tmpy; j++)
         {
-            Uint32 pixel = get_pixel(sdldata->current->img, i, j);
-            put_pixel(sdldata->select, i, j, pixel);
-            put_pixel(sdldata->selecttmp, i, j, pixel);
-            put_pixel(sdldata->current->img, i, j, 0);
+            Uint32 pixel = get_pixel(sdl_data.current->img, i, j);
+            put_pixel(sdl_data.select, i, j, pixel);
+            put_pixel(sdl_data.selecttmp, i, j, pixel);
+            put_pixel(sdl_data.current->img, i, j, 0);
         }
     }
     selecttmp_pos.x = select_pos.x;
@@ -467,125 +464,122 @@ void move_select(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
     (void) user_data;
     (void) widget;
     int moved = 0;
-    if (sdldata != NULL)
+    if (event->keyval == GDK_KEY_Up)
     {
-        if (event->keyval == GDK_KEY_Up)
+        moved = 1;
+        select_pos.y -= 1;
+    }
+    else if (event->keyval == GDK_KEY_Down)
+    {
+        moved = 1;
+        select_pos.y += 1;
+    }
+    else if (event->keyval == GDK_KEY_Left)
+    {
+        moved = 1;
+        select_pos.x -= 1;
+    }
+    else if (event->keyval == GDK_KEY_Right)
+    {
+        moved = 1;
+        select_pos.x += 1;
+    }
+    else if (event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R)
+    {
+        is_ctrl = 1;
+    }
+    else if (event->keyval == GDK_KEY_Delete)
+    {
+        SDL_FillRect(sdl_data.select, NULL, 0);
+        SDL_FillRect(sdl_data.selecttmp, NULL, 0);
+        deselect();
+        SDL_Surface *s = compress_frame(-1, 1);
+        redraw_surface((GtkDrawingArea *)user_data, s);
+    }
+    else if (is_ctrl)
+    {
+        if (event->keyval == GDK_KEY_c)
         {
-            moved = 1;
-            select_pos.y -= 1;
+            cp_surf(sdl_data.select, sdl_data.clipboard);
+            clipboard_pos.x = select_pos.x;
+            clipboard_pos.y = select_pos.y;
+            clipboard_pos.w = select_pos.w;
+            clipboard_pos.h = select_pos.h;
         }
-        else if (event->keyval == GDK_KEY_Down)
+        else if (event->keyval == GDK_KEY_x)
         {
-            moved = 1;
-            select_pos.y += 1;
-        }
-        else if (event->keyval == GDK_KEY_Left)
-        {
-            moved = 1;
-            select_pos.x -= 1;
-        }
-        else if (event->keyval == GDK_KEY_Right)
-        {
-            moved = 1;
-            select_pos.x += 1;
-        }
-        else if (event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R)
-        {
-            is_ctrl = 1;
-        }
-        else if (event->keyval == GDK_KEY_Delete)
-        {
-            SDL_FillRect(sdldata->select, NULL, 0);
-            SDL_FillRect(sdldata->selecttmp, NULL, 0);
+            cp_surf(sdl_data.select, sdl_data.clipboard);
+            clipboard_pos.x = select_pos.x;
+            clipboard_pos.y = select_pos.y;
+            clipboard_pos.w = select_pos.w;
+            clipboard_pos.h = select_pos.h;
+            SDL_FillRect(sdl_data.select, NULL, 0);
+            SDL_FillRect(sdl_data.selecttmp, NULL, 0);
             deselect();
             SDL_Surface *s = compress_frame(-1, 1);
             redraw_surface((GtkDrawingArea *)user_data, s);
         }
-        else if (is_ctrl)
+        else if (event->keyval == GDK_KEY_a)
         {
-            if (event->keyval == GDK_KEY_c)
+            set_select();
+            select_pos.x = 0;
+            select_pos.y = 0;
+            select_pos.w = sdl_data.width;
+            select_pos.h = sdl_data.height;
+            for (int i = select_pos.x; i < sdl_data.width; i++)
             {
-                cp_surf(sdldata->select, sdldata->clipboard);
-                clipboard_pos.x = select_pos.x;
-                clipboard_pos.y = select_pos.y;
-                clipboard_pos.w = select_pos.w;
-                clipboard_pos.h = select_pos.h;
-            }
-            else if (event->keyval == GDK_KEY_x)
-            {
-                cp_surf(sdldata->select, sdldata->clipboard);
-                clipboard_pos.x = select_pos.x;
-                clipboard_pos.y = select_pos.y;
-                clipboard_pos.w = select_pos.w;
-                clipboard_pos.h = select_pos.h;
-                SDL_FillRect(sdldata->select, NULL, 0);
-                SDL_FillRect(sdldata->selecttmp, NULL, 0);
-                deselect();
-                SDL_Surface *s = compress_frame(-1, 1);
-                redraw_surface((GtkDrawingArea *)user_data, s);
-            }
-            else if (event->keyval == GDK_KEY_a)
-            {
-                set_select();
-                select_pos.x = 0;
-                select_pos.y = 0;
-                select_pos.w = sdldata->width;
-                select_pos.h = sdldata->height;
-                for (int i = select_pos.x; i < sdldata->width; i++)
+                for (int j = select_pos.y; j < sdl_data.height; j++)
                 {
-                    for (int j = select_pos.y; j < sdldata->height; j++)
-                    {
-                        Uint32 pixel = get_pixel(sdldata->current->img, i, j);
-                        put_pixel(sdldata->select, i, j, pixel);
-                        put_pixel(sdldata->selecttmp, i, j, pixel);
-                        put_pixel(sdldata->current->img, i, j, 0);
-                    }
+                    Uint32 pixel = get_pixel(sdl_data.current->img, i, j);
+                    put_pixel(sdl_data.select, i, j, pixel);
+                    put_pixel(sdl_data.selecttmp, i, j, pixel);
+                    put_pixel(sdl_data.current->img, i, j, 0);
                 }
-                selecttmp_pos.x = select_pos.x;
-                selecttmp_pos.y = select_pos.y;
-                selecttmp_pos.w = select_pos.w;
-                selecttmp_pos.h = select_pos.h;
-                if (id_to != 0)
-                    g_source_remove(id_to);
-                id_to = g_timeout_add(500, glow, user_data);
-                draw_glow(user_data);
-                gtk_widget_set_sensitive((GtkWidget *)colorselect, FALSE);
             }
-            else if (event->keyval == GDK_KEY_v)
-            {
-                deselect();
-                cp_surf(sdldata->clipboard, sdldata->select);
-                cp_surf(sdldata->clipboard, sdldata->selecttmp);
-                set_select();
-                select_pos.x = clipboard_pos.x;
-                select_pos.y = clipboard_pos.y;
-                select_pos.w = clipboard_pos.w;
-                select_pos.h = clipboard_pos.h;
-                selecttmp_pos.x = clipboard_pos.x;
-                selecttmp_pos.y = clipboard_pos.y;
-                selecttmp_pos.w = clipboard_pos.w;
-                selecttmp_pos.h = clipboard_pos.h;
-                id_to = g_timeout_add(500, glow, user_data);
-                draw_glow(user_data);
-                gtk_widget_set_sensitive((GtkWidget *)colorselect, FALSE);
-            }
-        }
-        if (moved)
-        {
-            SDL_FillRect(sdldata->select, NULL, 0);
-            blit_selects();
-            SDL_Surface *s = compress_frame(-1, 1);
-            redraw_surface((GtkDrawingArea *)user_data, s);
+            selecttmp_pos.x = select_pos.x;
+            selecttmp_pos.y = select_pos.y;
+            selecttmp_pos.w = select_pos.w;
+            selecttmp_pos.h = select_pos.h;
             if (id_to != 0)
-            {
                 g_source_remove(id_to);
-                id_to = 0;
-            }
             id_to = g_timeout_add(500, glow, user_data);
             draw_glow(user_data);
+            gtk_widget_set_sensitive((GtkWidget *)colorselect, FALSE);
         }
-        
+        else if (event->keyval == GDK_KEY_v)
+        {
+            deselect();
+            cp_surf(sdl_data.clipboard, sdl_data.select);
+            cp_surf(sdl_data.clipboard, sdl_data.selecttmp);
+            set_select();
+            select_pos.x = clipboard_pos.x;
+            select_pos.y = clipboard_pos.y;
+            select_pos.w = clipboard_pos.w;
+            select_pos.h = clipboard_pos.h;
+            selecttmp_pos.x = clipboard_pos.x;
+            selecttmp_pos.y = clipboard_pos.y;
+            selecttmp_pos.w = clipboard_pos.w;
+            selecttmp_pos.h = clipboard_pos.h;
+            id_to = g_timeout_add(500, glow, user_data);
+            draw_glow(user_data);
+            gtk_widget_set_sensitive((GtkWidget *)colorselect, FALSE);
+        }
     }
+    if (moved)
+    {
+        SDL_FillRect(sdl_data.select, NULL, 0);
+        blit_selects();
+        SDL_Surface *s = compress_frame(-1, 1);
+        redraw_surface((GtkDrawingArea *)user_data, s);
+        if (id_to != 0)
+        {
+            g_source_remove(id_to);
+            id_to = 0;
+        }
+        id_to = g_timeout_add(500, glow, user_data);
+        draw_glow(user_data);
+    }
+
 }
 
 void get_key_release(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
@@ -761,7 +755,6 @@ static gboolean button_release_event_cb (GtkWidget *widget,
 // Setups the events for the drawing area
 void setup_drawing(GtkDrawingArea *drawing_area, GtkColorChooser *color_select, GtkWindow *window)
 {
-    sdldata = get_sdl_data();
     //      Signals for drawing
     //      Drawing areas do not handle clicks, this add the events
     gtk_widget_add_events((GtkWidget *) drawing_area, GDK_BUTTON_PRESS_MASK
