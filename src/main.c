@@ -14,7 +14,7 @@ int main(int argc, char **argv)
         if (x <= 0 || y <= 0)
             errx(1, "size cannot be smaller or equal to 0");
 
-        main_ui(x, y, "");
+        main_ui(x, y, NULL);
     }
     if (argc == 2)
     {

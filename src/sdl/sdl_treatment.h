@@ -25,18 +25,9 @@ typedef struct SDL_data
 
 struct SDL_data sdl_data;
 
-void prev_frame();
-void next_frame();
-void new_frame();
-void prev_layer();
-void next_layer();
-void new_layer();
-
 Uint32 get_pixel(SDL_Surface *surface, int x, int y);
 
 void put_pixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
-
-void  select_layer(int frame, int layer);
 
 Frame *get_frame(int i);
 
@@ -50,16 +41,6 @@ void export_sprite(char *filename);
 
 GdkRectangle calculate_coord(int x, int y, int win_x, int win_y, GdkRGBA* color);
 
-void fill(int x, int y, int win_x, int win_y, GdkRGBA* color);
-
-void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color);
-
-void line(int x1, int y1, int x2, int y2,int win_x, int win_y, GdkRGBA* color);
-
-void circle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color);
-
-GdkRGBA *eyedropper(int x, int y, int win_x, int win_y);
-
 SDL_Surface *previs_select(int x1, int y1, int x2,int y2);
 
 SDL_Surface *previsualisation(void (*fun) (int, int, int, int, int, int, GdkRGBA *),
@@ -67,12 +48,6 @@ SDL_Surface *previsualisation(void (*fun) (int, int, int, int, int, int, GdkRGBA
 
 struct SDL_data *get_sdl_data();
 
-void main_sdl(int width, int height);
-
-void main_picsel_import(char *filename);
-
-void main_gif_import(char *filename);
-
-void main_sdl_import(char *filename);
+void main_sdl(int width, int height, char *filename);
 
 #endif

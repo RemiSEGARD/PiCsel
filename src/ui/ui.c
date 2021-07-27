@@ -135,21 +135,7 @@ void on_import(GtkWidget *widget, gpointer window)
 	char* filename = open_dialog(window);
     if(filename)
     {
-        reset_grids();
-        if (g_str_has_suffix(filename, ".picsel"))
-        {
-            main_picsel_import(filename);
-        }
-        else if (g_str_has_suffix(filename, ".gif"))
-        {
-            main_gif_import(filename);
-        }
-        else
-        {
-            main_sdl_import(filename);
-        }
-
-
+        main_sdl(-1, -1, filename);
 		SDL_Surface *surface = compress_frame(-1, 1);
 		redraw_surface(darea, surface);
         add_grid_buttons();
@@ -242,20 +228,7 @@ int main_ui(int x, int y, char *filename)
     GtkMenuItem* export_button_sprite = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-ss"));
     GtkMenuItem* export_button_gif = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-gif"));
 
-    if (x != 0)
-        main_sdl(x, y);
-    else if (g_str_has_suffix(filename, ".picsel"))
-    {
-        main_picsel_import(filename);
-    }
-    else if (g_str_has_suffix(filename, ".gif"))
-    {
-        main_gif_import(filename);
-    }
-    else
-    {
-        main_sdl_import(filename);
-    }
+    main_sdl(x, y, filename);
 
 
     // Connects signal handlers

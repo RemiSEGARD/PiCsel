@@ -10,69 +10,11 @@
 #include "../file_io/savesurf.h"
 #include "../file_io/gifdec.h"
 #include "../file_io/gifenc.h"
+#include "shapes.h"
 #include <math.h>
 #include <glib.h>
 
-void select_layer(int frame, int layer);
-
-void fill_sdl(int x, int y, GdkRGBA* color, Uint32 match);
-
 struct SDL_data sdl_data;
-
-//SDL_Surface *screen_surface;
-
-void prev_frame()
-{
-    if(sdl_data.curframe != 0)
-    {
-        // no need to change curframe, select_layer does it
-        select_layer(sdl_data.curframe-1, sdl_data.curlayer);
-    }
-}
-
-void next_frame()
-{
-    if(sdl_data.curframe < sdl_data.nbframe - 1)
-    {
-        // no need to change curframe, select_layer does it
-        select_layer(sdl_data.curframe+1, sdl_data.curlayer);
-    }
-    else
-    {
-        select_layer(0, sdl_data.curlayer);
-    }
-}
-
-void new_frame()
-{
-    add_frame(sdl_data.frames, sdl_data.width, sdl_data.height, sdl_data.nblayer);
-    sdl_data.nbframe++;
-}
-
-void prev_layer()
-{
-    if(sdl_data.curlayer != 0)
-    {
-        sdl_data.curlayer--;
-        sdl_data.current = sdl_data.current->prev;
-    }
-}
-
-void next_layer()
-{
-    if(sdl_data.current->next != NULL)
-    {
-        sdl_data.curlayer++;
-        sdl_data.current = sdl_data.current->next;
-    }
-}
-
-void new_layer()
-{
-    add_layer_to_all_frames(sdl_data.frames, sdl_data.width, sdl_data.height);
-    sdl_data.nblayer++;
-}
-
 
 Frame* get_frame(int i)
 {
@@ -84,32 +26,6 @@ Frame* get_frame(int i)
     }
     return res;
 }
-
-void select_layer(int frame, int layer)
-{
-    int iframe = frame;
-    int ilayer = layer;
-
-    Frame *frames = sdl_data.frames->next;
-    while (iframe > 0 && frames != NULL)
-    {
-        iframe--;
-        frames = frames->next;
-    }
-    Layer *nextlayer = frames->layer->next;
-    while (ilayer > 0 && nextlayer != NULL)
-    {
-        ilayer--;
-        nextlayer = nextlayer->next;
-    }
-    if (nextlayer != NULL)
-    {
-        sdl_data.current = nextlayer;
-        sdl_data.curlayer = layer;
-        sdl_data.curframe = frame;
-    }
-}
-
 
 static inline Uint8 *pixel_ref(SDL_Surface *surf, unsigned x, unsigned y)
 {
@@ -272,11 +188,6 @@ SDL_Surface *compress_frame(int i, int keep_bg)
     return f->img;
 }
 
-void import_img(char *file)
-{
-    (void)file;
-}
-
 void export_current_frame(char *filename)
 {
     SDL_Surface *c = compress_frame(sdl_data.curframe, 0);
@@ -412,444 +323,7 @@ GdkRectangle calculate_coord(int x, int y, int win_x, int win_y, GdkRGBA* color)
     return rect;
 }
 
-void fill(int x, int y, int win_x, int win_y, GdkRGBA* color)
-{
-    // function called by drawing.c
-    // prepares everything for the actual fill function
-    if (sdl_data.current->shown == 0 ) return;
-    // calculate the new coordinates
-    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
-    {
-        x = x * sdl_data.width / (win_x - win_x % sdl_data.width);
-        y = y * sdl_data.width / (win_x - win_x % sdl_data.width);
-    }
-    else
-    {
-        x = x * sdl_data.height / (win_y - win_y % sdl_data.height);
-        y = y * sdl_data.height / (win_y - win_y % sdl_data.height);
-    }
-    // gets the color that we want to replace by GdkRGBA* color
-    Uint32 pixel = get_pixel(sdl_data.current->img, x, y);
-    /*Uint8 r = color->red * 255;
-    Uint8 g = color->green * 255;
-    Uint8 b = color->blue * 255;
-    Uint8 a = color->alpha * 255;
-    Uint32 color_to_pixel = SDL_MapRGBA(sdl_current->img->format,r,g,b,a);*/
-    fill_sdl(x,y,color,pixel);
-}
 
-void fill_sdl(int x, int y, GdkRGBA* color, Uint32 match)
-{
-    // Fills on the SDL_Surface
-    // match_r, match_g, match_b, match_a represent the rgba values needed to match the color
-    if (x < 0 || y < 0 || x >= sdl_data.width || y >= sdl_data.height)
-        return;
-    Uint8 r,g,b,a;
-    Uint32 pixel = get_pixel(sdl_data.current->img, x, y);
-    SDL_GetRGBA(pixel, sdl_data.current->img->format, &r, &g, &b, &a);
-
-    int cr = color->red*255;
-    int cg = color->green*255;
-    int cb = color->blue*255;
-    int ca = color->alpha*255;
-
-    if (r == cr && g == cg && b == cb && a == ca)
-    {
-        return;
-    }
-    // condition needs to be changed to detect the proper pixel now it only detects white pixels
-    if (match == pixel)
-    {
-        // converts the color from GdkRGBA to a value from 0 to 255
-        Uint32 p = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
-        put_pixel(sdl_data.current->img, x, y, p);
-        // launches all the recursive function to draw the pixels around current pixel
-        fill_sdl(x+1,y,color,match);
-        fill_sdl(x-1,y,color,match);
-        fill_sdl(x,y+1,color,match);
-        fill_sdl(x,y-1,color,match);
-    }
-}
-
-
-void line(int x1, int y1, int x2, int y2,int win_x,int win_y, GdkRGBA* color)
-{
-    // Draws the line from (x1,y1) to (x2,y2) onthe SDL_Surface
-    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
-    {
-        x1 = x1 * sdl_data.width / (win_x - win_x % sdl_data.width);
-        y1 = y1 * sdl_data.width / (win_x - win_x % sdl_data.width);
-        x2 = x2 * sdl_data.width / (win_x - win_x % sdl_data.width);
-        y2 = y2 * sdl_data.width / (win_x - win_x % sdl_data.width);
-    }
-    else
-    {
-        x1 = x1 * sdl_data.height / (win_y - win_y % sdl_data.height);
-        y1 = y1 * sdl_data.height / (win_y - win_y % sdl_data.height);
-        x2 = x2 * sdl_data.height / (win_y - win_y % sdl_data.height);
-        y2 = y2 * sdl_data.height / (win_y - win_y % sdl_data.height);
-    }
-    // Convert GdkRGBA color to a value usable by SDL
-    Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
-    // Draws the line
-    /*
-    // in case of straight vertical lines
-    if (x1 == x2)
-    {
-        if (y1>y2)
-        {
-            while (y1>y2)
-            {
-                put_pixel(sdl_data.current->img,x1,y1,pixel);
-                y1--;
-            }
-        }
-        if (y1<y2)
-        {
-            while (y1<=y2)
-            {
-                put_pixel(sdl_data.current->img,x1,y1,pixel);
-                y1++;
-            }
-        }
-        return;
-    }
-    // in case of straight horizontal lines
-    if (y1 == y2)
-    {
-        if (x1>x2)
-        {
-            while (x1>x2)
-            {
-                put_pixel(sdl_data.current->img,x1,y1,pixel);
-                x1--;
-            }
-        }
-        if (x1<x2)
-        {
-            while (x1<=x2)
-            {
-                put_pixel(sdl_data.current->img,x1,y1,pixel);
-                x1++;
-            }
-        }
-        return;
-    }*/
-    
-    /*
-    // Swaps if necessary
-    if (x1 > x2)
-    {
-        int tmp = x1;
-        x1 = x2;
-        x2 = tmp;
-    }
-    if (y1 > y2)
-    {
-        int tmp = y1;
-        y1 = y2;
-        y2 = tmp;
-    }*/
-    
-
-    double x, y, dx, dy, step;
-    dx = (float)(x2 - x1);
-    dy = (float)(y2 - y1);
-    if (fabs(dx) > fabs(dy))
-        step = fabs(dx);
-    else
-        step = fabs(dy);
-    dx = dx / step;
-    dy = dy / step;
-    x = x1;
-    y = y1;
-    int i = 0;
-    while (i <= step)
-    {
-        put_pixel(sdl_data.current->img, (int)x, (int)y, pixel);
-        x += dx;
-        y += dy;
-        i = i + 1;
-    }
-/*
-    double coef = (double)(y2 - y1) / (double)(x2 - x1);
-    double b = y1 - coef * x1;
-
-    for (int i = x1; i <= x2; i++)
-    {
-        put_pixel(sdl_data.current->img, i, (int)(i * coef + b), pixel);
-    }
-*/
-
-/*
-    int dx, dy, p, x, y;
-    // Swap in case x1>x2 and y1>y2
-    
-    if (x1 > x2 && y1 > y2)
-    {
-        int tmp = x1;
-        x1 = x2;
-        x2 = tmp;
-        tmp = y1;
-        y1 = y2;
-        y2 = tmp;
-    }
-    // case x1<x2 and y1<y2
-    if (x1<x2 && y1 < y2)
-    {
-        dx = x2-x1;
-        dy = y2 - y1;
-
-        x = x1;
-        y = y1;
-        p = 2*dy-dx;
-        while (x<x2)
-        {
-            if (p >= 0)
-            {
-                put_pixel(sdl_data.current->img,x,y,pixel);
-                y=y+1;
-                p=p+2*dy-2*dx;
-            }
-            else
-            {
-                put_pixel(sdl_data.current->img,x,y,pixel);
-                p=p+2*dy;
-            }
-        x=x+1;
-        }
-    }
-    // Swap in case x1 > x2 and y1 < y2
-    if (x1 > x2 && y1 < y2)
-    {
-        int tmp = x1;
-        x1 = x2;
-        x2 = tmp;
-        tmp = y1;
-        y1 = y2;
-        y2 = tmp;
-    }
-    // case x1 < x2 and y1>y2
-    if (x1 < x2 && y1 > y2)
-    {
-        dx = x2-x1;
-        dy = y1 - y2;
-
-        x = x1;
-        y = y1;
-        p = 2*dy-dx;
-        while (x<x2)
-        {
-            if (p >= 0)
-            {
-                put_pixel(sdl_data.current->img,x,y,pixel);
-                y=y-1;
-                p=p+2*dy-2*dx;
-            }
-            else
-            {
-                put_pixel(sdl_data.current->img,x,y,pixel);
-                p=p+2*dy;
-            }
-        x=x+1;
-        }
-    }
-    // Just in case x1 == x2 and y1 == y2
-    put_pixel(sdl_data.current->img,x1,y1,pixel);
-*/
-}
-
-void rectangle(int x1, int y1, int x2, int y2, int win_x, int win_y, GdkRGBA* color)
-{
-    // Draws a rectangle from (x1,y1) to (x2,y2) on the SDL_Surface
-    // Calculate the new coordinates
-    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
-    {
-        x1 = x1 * sdl_data.width / (win_x - win_x % sdl_data.width);
-        y1 = y1 * sdl_data.width / (win_x - win_x % sdl_data.width);
-        x2 = x2 * sdl_data.width / (win_x - win_x % sdl_data.width);
-        y2 = y2 * sdl_data.width / (win_x - win_x % sdl_data.width);
-    }
-    else
-    {
-        x1 = x1 * sdl_data.height / (win_y - win_y % sdl_data.height);
-        y1 = y1 * sdl_data.height / (win_y - win_y % sdl_data.height);
-        x2 = x2 * sdl_data.height / (win_y - win_y % sdl_data.height);
-        y2 = y2 * sdl_data.height / (win_y - win_y % sdl_data.height);
-    }
-    // case 1
-    if (x1 < x2 && y1 < y2)
-    {
-        // Gets height and width of rectangle
-        int h = y2 - y1;
-        int w = x2 - x1;
-        // Convert GdkRGBA color to a value usable by SDL
-        Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
-        // Draws the horizontal lines
-        for (int i = 0; i < w; i++)
-        {
-            put_pixel(sdl_data.current->img, x1 + i, y1, pixel);
-            put_pixel(sdl_data.current->img, x1 + i, y1 + h, pixel);
-        }
-        // Draws the verticle lines
-        for (int i = 0; i <= h; i++)
-        {
-            put_pixel(sdl_data.current->img, x1, y1 + i, pixel);
-            put_pixel(sdl_data.current->img, x1 + w, y1 + i, pixel);
-        }
-    }
-    // case 2
-    if (x1 > x2 && y1 > y2)
-    {
-        // Gets height and width of rectangle
-        int h = y1 - y2;
-        int w = x1 - x2;
-        // Convert GdkRGBA color to a value usable by SDL
-        Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
-        // Draws the horizontal lines
-        for (int i = 0; i < w; i++)
-        {
-            put_pixel(sdl_data.current->img, x1 - i, y1, pixel);
-            put_pixel(sdl_data.current->img, x1 - i, y1 - h, pixel);
-        }
-        // Draws the verticle lines
-        for (int i = 0; i <= h; i++)
-        {
-            put_pixel(sdl_data.current->img, x1, y1 - i, pixel);
-            put_pixel(sdl_data.current->img, x1 - w, y1 - i, pixel);
-        }
-    }
-    // case 3
-    if (x1 < x2 && y1 > y2)
-    {
-        // Gets height and width of rectangle
-        int h = y1 - y2;
-        int w = x2 - x1;
-        // Convert GdkRGBA color to a value usable by SDL
-        Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
-        // Draws the horizontal lines
-        for (int i = 0; i < w; i++)
-        {
-            put_pixel(sdl_data.current->img, x1 + i, y1, pixel);
-            put_pixel(sdl_data.current->img, x1 + i, y1 - h, pixel);
-        }
-        // Draws the verticle lines
-        for (int i = 0; i <= h; i++)
-        {
-            put_pixel(sdl_data.current->img, x1, y1 - i, pixel);
-            put_pixel(sdl_data.current->img, x1 + w, y1 - i, pixel);
-        }
-    }
-    // case 4
-    if (x1 > x2 && y1 < y2)
-    {
-        // Gets height and width of rectangle
-        int h = y2 - y1;
-        int w = x1 - x2;
-        // Convert GdkRGBA color to a value usable by SDL
-        Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
-        // Draws the horizontal lines
-        for (int i = 0; i < w; i++)
-        {
-            put_pixel(sdl_data.current->img, x1 - i, y1, pixel);
-            put_pixel(sdl_data.current->img, x1 - i, y1 + h, pixel);
-        }
-        // Draws the verticle lines
-        for (int i = 0; i <= h; i++)
-        {
-            put_pixel(sdl_data.current->img, x1, y1 + i, pixel);
-            put_pixel(sdl_data.current->img, x1 - w, y1 + i, pixel);
-        }
-    }
-}
-
-void circle(int x1, int y1, int x2,int y2,int win_x,int win_y, GdkRGBA* color)
-{
-    // draws a circle "between" the coordonates (x1,y1) and (x2,y2)
-
-    // Calculate the new coordinates
-    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
-    {
-        x1 = x1 * sdl_data.width / (win_x - win_x % sdl_data.width);
-        y1 = y1 * sdl_data.width / (win_x - win_x % sdl_data.width);
-        x2 = x2 * sdl_data.width / (win_x - win_x % sdl_data.width);
-        y2 = y2 * sdl_data.width / (win_x - win_x % sdl_data.width);
-    }
-    else
-    {
-        x1 = x1 * sdl_data.height / (win_y - win_y % sdl_data.height);
-        y1 = y1 * sdl_data.height / (win_y - win_y % sdl_data.height);
-        x2 = x2 * sdl_data.height / (win_y - win_y % sdl_data.height);
-        y2 = y2 * sdl_data.height / (win_y - win_y % sdl_data.height);
-    }
-    // Convert GdkRGBA color to a value usable by SDL
-    Uint32 pixel = SDL_MapRGBA(sdl_data.current->img->format, color->red * 255, color->green* 255, color->blue * 255, color->alpha*255);
-
-    // Calculate the radius and center of the circle
-    
-    if (x1 > x2 && y1 > y2)
-    {
-        int tmp = x1;
-        x1 = x2;
-        x2 = tmp;
-        tmp = y1;
-        y1 = y2;
-        y2 = tmp;
-    }
-    if(x1>x2 && y1<y2)
-    {
-        int tmp = x1;
-        x1 = x2;
-        x2 = tmp;
-        tmp = y1;
-        y1 = y2;
-        y2 = tmp;
-    }
-
-    int center_x = (x1+x2)/2;
-    int center_y = (y1+y2)/2;
-    // highest x coordinate
-    int r = x2 - center_x;
-
-    // Bresenham
-    int x = 0;
-    int y = r;
-    int d = 3 - 2 * r;
-
-    // Draws to the 8 point of the circle
-    if (x >= 0 || y >= 0 || y <= sdl_data.height || x <= sdl_data.width)
-        put_pixel(sdl_data.current->img, center_x + x, center_y + y, pixel);
-    put_pixel(sdl_data.current->img, center_x + y, center_y + x, pixel);
-    put_pixel(sdl_data.current->img, center_x - y, center_y + x, pixel);
-    put_pixel(sdl_data.current->img, center_x - x, center_y + y, pixel);
-    put_pixel(sdl_data.current->img, center_x - x, center_y - y, pixel);
-    put_pixel(sdl_data.current->img, center_x + y, center_y - x, pixel);
-    put_pixel(sdl_data.current->img, center_x + x, center_y - y, pixel);
-    put_pixel(sdl_data.current->img, center_x - y, center_y - x, pixel);
-
-
-    while(y>=x)
-    {
-        x++;
-        if (d>0)
-        {
-            y--;
-            d = d+4*(x-y)+10;
-        }
-        else
-            d = d + 4 * x + 6;
-
-        put_pixel(sdl_data.current->img, center_x + x, center_y + y, pixel);
-        put_pixel(sdl_data.current->img, center_x + y, center_y + x, pixel);
-        put_pixel(sdl_data.current->img, center_x - y, center_y + x, pixel);
-        put_pixel(sdl_data.current->img, center_x - x, center_y + y, pixel);
-        put_pixel(sdl_data.current->img, center_x - x, center_y - y, pixel);
-        put_pixel(sdl_data.current->img, center_x + y, center_y - x, pixel);
-        put_pixel(sdl_data.current->img, center_x + x, center_y - y, pixel);
-        put_pixel(sdl_data.current->img, center_x - y, center_y - x, pixel);
-    }
-
-}
 
 
 SDL_Surface *previs_select(int x1, int y1, int x2,int y2)
@@ -947,47 +421,49 @@ SDL_Surface *previsualisation(void (*fun) (int, int, int, int, int, int, GdkRGBA
 
 }
 
-GdkRGBA* eyedropper(int x, int y, int win_x, int win_y)
+
+void main_sdl(int width, int height, char *filename)
 {
-    if ((double) sdl_data.width / win_x > (double) sdl_data.height / win_y)
+    if (filename == NULL)
     {
-        x = x * sdl_data.width / (win_x - win_x % sdl_data.width);
-        y = y * sdl_data.width / (win_x - win_x % sdl_data.width);
+        sdl_data.width = width;
+        sdl_data.height = height;
+        sdl_data.frames = init_frame(width, height);
+    }
+    else if (g_str_has_suffix(filename, ".picsel"))
+    {
+        Frame *frame = import_picsel(filename);
+        sdl_data.width = frame->next->img->w;
+        sdl_data.height = frame->next->img->h;
+        sdl_data.frames = frame;
+    }
+    else if (g_str_has_suffix(filename, ".gif"))
+    {
+        Frame *frame = import_gif(filename);
+        sdl_data.width = frame->next->img->w;
+        sdl_data.height = frame->next->img->h;
+        sdl_data.frames = frame;
     }
     else
     {
-        x = x * sdl_data.height / (win_y - win_y % sdl_data.height);
-        y = y * sdl_data.height / (win_y - win_y % sdl_data.height);
+        SDL_Surface *import = IMG_Load(filename);
+        if (import == NULL)
+        {
+            errx(1, "Could not import given file");
+        }
+        sdl_data.width = import->w;
+        sdl_data.height = import->h;
+        sdl_data.frames = init_frame(import->w, import->h);
+        sdl_data.current = sdl_data.frames->next->layer->next;
+        SDL_Surface *betterimport = SDL_ConvertSurface(import, 
+                sdl_data.current->img->format, 0);
+        SDL_FreeSurface(sdl_data.current->img);
+        SDL_FreeSurface(import);
+        sdl_data.current->img = betterimport;
     }
-    if (x < 0 || y < 0 || y >= sdl_data.height || x >= sdl_data.width)
-        return NULL;
-
-    Uint32 p = get_pixel(sdl_data.current->img,x,y);
-    Uint8 r,g,b,a;
-    SDL_GetRGBA(p, sdl_data.current->img->format, &r, &g, &b, &a);
-    GdkRGBA* color = malloc(sizeof(GdkRGBA));
-    double red = (double) r;
-    double green = (double) g;
-    double blue = (double) b;
-    double alpha = (double) a;
-    color->red = red / 255;
-    color->green = green / 255;
-    color->blue = blue / 255;
-    color->alpha = alpha / 255;
-    return color;
-}
-
-void main_sdl(int width, int height)
-{
-    // Creates a new SDL_Surface
-    // SDL_Surface* image_surface = SDL_CreateRGBSurface(0, width, height, 32,
-    //        0, 0, 0, 0);
-    sdl_data.width = width;
-    sdl_data.height = height;
-    sdl_data.frames = init_frame(width, height);
     sdl_data.current = sdl_data.frames->next->layer->next;
-    sdl_data.nblayer = 1;
-    sdl_data.nbframe = 1;
+    sdl_data.nblayer = length_layer(sdl_data.current->prev);
+    sdl_data.nbframe = length_frame(sdl_data.frames);
     sdl_data.curlayer = 0;
     sdl_data.curframe = 0;
 
@@ -1021,144 +497,3 @@ void main_sdl(int width, int height)
     SDL_FillRect(sdl_data.previs, NULL, 0x00000000);
 
 }
-
-void main_picsel_import(char *filename)
-{
-    Frame *frame = import_picsel(filename);
-    sdl_data.width = frame->next->img->w;
-    sdl_data.height = frame->next->img->h;
-    sdl_data.frames = frame;
-    sdl_data.current = sdl_data.frames->next->layer->next;
-    sdl_data.nblayer = length_layer(sdl_data.current->prev);
-    sdl_data.nbframe = length_frame(frame);
-    sdl_data.curlayer = 0;
-    sdl_data.curframe = 0;
-    
-    Uint32 rmask, gmask, bmask, amask;
-
-    /* SDL interprets each pixel as a 32-bit number, so our masks must depend
-       on the endianness (byte order) of the machine */
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    rmask = 0xff000000;
-    gmask = 0x00ff0000;
-    bmask = 0x0000ff00;
-    amask = 0x000000ff;
-#else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = 0xff000000;
-#endif
-
-    sdl_data.previs = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    sdl_data.select = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    sdl_data.clipboard = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    sdl_data.selecttmp = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    if (sdl_data.previs == NULL) {
-        errx(1, "SDL_CreateRGBSurface() failed");
-    }
-    SDL_FillRect(sdl_data.previs, NULL, 0x00000000);
-    
-}
-
-
-void main_gif_import(char *filename)
-{
-    Frame *frame = import_gif(filename);
-    sdl_data.width = frame->next->img->w;
-    sdl_data.height = frame->next->img->h;
-    sdl_data.frames = frame;
-    sdl_data.current = sdl_data.frames->next->layer->next;
-    sdl_data.nblayer = length_layer(sdl_data.current->prev);
-    sdl_data.nbframe = length_frame(frame);
-    sdl_data.curlayer = 0;
-    sdl_data.curframe = 0;
-    
-    Uint32 rmask, gmask, bmask, amask;
-
-    
-
-    /* SDL interprets each pixel as a 32-bit number, so our masks must depend
-       on the endianness (byte order) of the machine */
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    rmask = 0xff000000;
-    gmask = 0x00ff0000;
-    bmask = 0x0000ff00;
-    amask = 0x000000ff;
-#else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = 0xff000000;
-#endif
-
-    sdl_data.previs = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    sdl_data.select = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    sdl_data.clipboard = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    sdl_data.selecttmp = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    if (sdl_data.previs == NULL) {
-        errx(1, "SDL_CreateRGBSurface() failed");
-    }
-    SDL_FillRect(sdl_data.previs, NULL, 0x00000000);
-    
-}
-
-void main_sdl_import(char *filename)
-{
-    SDL_Surface *import = IMG_Load(filename);
-
-    sdl_data.width = import->w;
-    sdl_data.height = import->h;
-    sdl_data.frames = init_frame(import->w, import->h);
-    sdl_data.current = sdl_data.frames->next->layer->next;
-    SDL_Surface *betterimport = SDL_ConvertSurface(import, 
-            sdl_data.current->img->format, 0);
-    SDL_FreeSurface(sdl_data.current->img);
-    SDL_FreeSurface(import);
-    sdl_data.current->img = betterimport;
-    sdl_data.nblayer = 1;
-    sdl_data.nbframe = 1;
-    sdl_data.curlayer = 0;
-    sdl_data.curframe = 0;
-    
-    Uint32 rmask, gmask, bmask, amask;
-    
-
-    /* SDL interprets each pixel as a 32-bit number, so our masks must depend
-       on the endianness (byte order) of the machine */
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    rmask = 0xff000000;
-    gmask = 0x00ff0000;
-    bmask = 0x0000ff00;
-    amask = 0x000000ff;
-#else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = 0xff000000;
-#endif
-
-    sdl_data.previs = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    sdl_data.select = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    sdl_data.clipboard = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    sdl_data.selecttmp = SDL_CreateRGBSurface(0, sdl_data.width, sdl_data.height, 32,
-                                   rmask, gmask, bmask, amask);
-    if (sdl_data.previs == NULL) {
-        errx(1, "SDL_CreateRGBSurface() failed");
-    }
-    SDL_FillRect(sdl_data.previs, NULL, 0x00000000);
-
-    // SDL_FreeSurface(screen_surface);
-}
-

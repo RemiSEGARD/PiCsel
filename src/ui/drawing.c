@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "ui.h"
 #include "SDL.h"
+#include "../sdl/shapes.h"
 #include "../sdl/sdl_treatment.h"
 #include "../file_io/fileio_picsel.h"
 #include <time.h>

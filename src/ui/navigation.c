@@ -12,6 +12,57 @@ GtkWidget *curlayer_button;
 GtkGrid* f_grid;
 GtkGrid* l_grid;
 
+
+void select_layer(int frame, int layer)
+{
+    int iframe = frame;
+    int ilayer = layer;
+
+    Frame *frames = sdl_data.frames->next;
+    while (iframe > 0 && frames != NULL)
+    {
+        iframe--;
+        frames = frames->next;
+    }
+    Layer *nextlayer = frames->layer->next;
+    while (ilayer > 0 && nextlayer != NULL)
+    {
+        ilayer--;
+        nextlayer = nextlayer->next;
+    }
+    if (nextlayer != NULL)
+    {
+        sdl_data.current = nextlayer;
+        sdl_data.curlayer = layer;
+        sdl_data.curframe = frame;
+    }
+}
+
+static void next_frame()
+{
+    if(sdl_data.curframe < sdl_data.nbframe - 1)
+    {
+        // no need to change curframe, select_layer does it
+        select_layer(sdl_data.curframe+1, sdl_data.curlayer);
+    }
+    else
+    {
+        select_layer(0, sdl_data.curlayer);
+    }
+}
+
+static void new_frame()
+{
+    add_frame(sdl_data.frames, sdl_data.width, sdl_data.height, sdl_data.nblayer);
+    sdl_data.nbframe++;
+}
+
+static void new_layer()
+{
+    add_layer_to_all_frames(sdl_data.frames, sdl_data.width, sdl_data.height);
+    sdl_data.nblayer++;
+}
+
 static void choose_frame(GtkWidget* widget, gpointer data)
 {
     deselect();
