@@ -2,23 +2,12 @@
 #include <stdio.h>
 #include "ui.h"
 #include "SDL.h"
+#include "drawing.h"
 #include "../sdl/shapes.h"
 #include "../sdl/sdl_treatment.h"
 #include "../file_io/fileio_picsel.h"
 #include <time.h>
 #include <unistd.h>
-
-typedef enum Tools
-{
-    DRAW,
-    ERASER,
-    FILL,
-    LINE,
-    RECTANGLE,
-    CIRCLE,
-    SELECT,
-} Tools;
-
 
 /* Surface to store current scribbles */
 static cairo_surface_t *surface = NULL;
@@ -30,19 +19,7 @@ gdouble x1,y1;
 void deselect();
 
 GtkColorChooser *colorselect;
-/* Sets the whole surface to white */
-/*static void clear_surface (void)
-{
-    cairo_t *cr;
 
-    cr = cairo_create (surface);
-
-    cairo_set_source_rgb (cr, 1, 1, 1);
-    cairo_paint (cr);
-
-    cairo_destroy (cr);
-}
-*/
 void draw_background()
 {
     cairo_t *cr;
@@ -56,42 +33,18 @@ void draw_background()
 
 }
 
-void set_pen()
+void set_tool(Tools selected_tool)
 {
-    deselect();
-    tool = DRAW;
-}
-
-void set_select()
-{
-    tool = SELECT;
-}
-
-void set_eraser()
-{
-    deselect();
-    tool = ERASER;
-}
-void set_fill()
-{
-    deselect();
-    tool = FILL;
-}
-void set_line()
-{
-    deselect();
-    tool = LINE;
-}
-void set_rectangle()
-{
-    deselect();
-    tool = RECTANGLE;
-}
-
-void set_circle()
-{
-    deselect();
-    tool = CIRCLE;
+    if (selected_tool != SELECT)
+    {
+        deselect();
+        gtk_widget_set_sensitive((GtkWidget *)colorselect, TRUE);
+    }
+    else
+    {
+        gtk_widget_set_sensitive((GtkWidget *)colorselect, FALSE);
+    }
+    tool = selected_tool;
 }
 
 /* Create a new surface of the appropriate size to store our scribbles */
@@ -156,16 +109,6 @@ static void draw_brush (GtkWidget *widget, gdouble x, gdouble y, GdkRGBA* color)
     gtk_widget_queue_draw_area (widget, rect.x, rect.y, 
             rect.width, rect.height);
 }
-
-/*
-draw_cirlce_release(GtkDrawingArea)
-{
-    circle()
-    compress-frame(-1, 1)
-    redraw_surface()
-
-}
-*/
 
 /* Draw a rectangle on the surface at the given position of an image */
 static void draw_pixel (GtkWidget *widget, int x, int y, SDL_Surface *s)
@@ -522,7 +465,7 @@ void move_select(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
         }
         else if (event->keyval == GDK_KEY_a)
         {
-            set_select();
+            set_tool(SELECT);
             select_pos.x = 0;
             select_pos.y = 0;
             select_pos.w = sdl_data.width;
@@ -545,14 +488,13 @@ void move_select(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
                 g_source_remove(id_to);
             id_to = g_timeout_add(500, glow, user_data);
             draw_glow(user_data);
-            gtk_widget_set_sensitive((GtkWidget *)colorselect, FALSE);
         }
         else if (event->keyval == GDK_KEY_v)
         {
             deselect();
             cp_surf(sdl_data.clipboard, sdl_data.select);
             cp_surf(sdl_data.clipboard, sdl_data.selecttmp);
-            set_select();
+            set_tool(SELECT);
             select_pos.x = clipboard_pos.x;
             select_pos.y = clipboard_pos.y;
             select_pos.w = clipboard_pos.w;
@@ -563,7 +505,6 @@ void move_select(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
             selecttmp_pos.h = clipboard_pos.h;
             id_to = g_timeout_add(500, glow, user_data);
             draw_glow(user_data);
-            gtk_widget_set_sensitive((GtkWidget *)colorselect, FALSE);
         }
     }
     if (moved)

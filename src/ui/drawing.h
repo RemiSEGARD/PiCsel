@@ -1,21 +1,20 @@
-#include <SDL.h>
-
 #ifndef DRAWING_H
 #define DRAWING_H
 
-void set_pen();
+#include <SDL.h>
 
-void set_select();
+typedef enum Tools
+{
+    DRAW,
+    ERASER,
+    FILL,
+    LINE,
+    RECTANGLE,
+    CIRCLE,
+    SELECT,
+} Tools;
 
-void set_eraser();
-
-void set_fill();
-
-void set_line();
-
-void set_rectangle();
-
-void set_circle();
+void set_tool(Tools selected_tool);
 
 void deselect();
 

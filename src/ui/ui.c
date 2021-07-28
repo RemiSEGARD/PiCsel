@@ -11,89 +11,22 @@
 
 GtkDrawingArea *darea;
 
-// signal for selecting tools 
-gint tpen = 1;
-gint teraser = 2;
-gint tfill = 3;
-gint tline = 4;
-gint trectangle = 5;
-gint tcircle = 6;
-
 void on_quit()
 {
     //free_all call = free liste de layers + les sdl surface
     gtk_main_quit();
 }
 
-
-
+void select_tool(GtkWidget *widget, gpointer data)
+{
+    (void) widget;
+    set_tool((Tools) data);
+    SDL_Surface *surface = compress_frame(-1, 1);
+    redraw_surface(darea, surface);
+}
 
 int w;
 int h;
-
-void select_pen(GtkWidget *widget, gpointer data)
-{
-    gtk_widget_set_sensitive(data, TRUE);
-    (void) widget;
-    set_pen();
-    SDL_Surface *surface = compress_frame(-1, 1);
-    redraw_surface(darea, surface);
-}
-
-void select_select(GtkWidget *widget, gpointer data)
-{
-    gtk_widget_set_sensitive(data, FALSE);
-    (void) widget;
-    set_select();
-    SDL_Surface *surface = compress_frame(-1, 1);
-    redraw_surface(darea, surface);
-}
-
-
-void select_eraser(GtkWidget *widget, gpointer data)
-{
-    gtk_widget_set_sensitive(data, TRUE);
-    (void) widget;
-    set_eraser();
-    SDL_Surface *surface = compress_frame(-1, 1);
-    redraw_surface(darea, surface);
-}
-
-void select_fill(GtkWidget *widget, gpointer data)
-{
-    gtk_widget_set_sensitive(data, TRUE);
-    (void) widget;
-    set_fill();
-    SDL_Surface *surface = compress_frame(-1, 1);
-    redraw_surface(darea, surface);
-}
-
-void select_line(GtkWidget *widget, gpointer data)
-{
-    gtk_widget_set_sensitive(data, TRUE);
-    (void) widget;
-    set_line();
-    SDL_Surface *surface = compress_frame(-1, 1);
-    redraw_surface(darea, surface);
-}
-
-void select_rectangle(GtkWidget *widget, gpointer data)
-{
-    gtk_widget_set_sensitive(data, TRUE);
-    (void) widget;
-    set_rectangle();
-    SDL_Surface *surface = compress_frame(-1, 1);
-    redraw_surface(darea, surface);
-}
-
-void select_circle(GtkWidget *widget, gpointer data)
-{
-    gtk_widget_set_sensitive(data, TRUE);
-    (void) widget;
-    set_circle();
-    SDL_Surface *surface = compress_frame(-1, 1);
-    redraw_surface(darea, surface);
-}
 
 void on_drawingarea_draw(GtkWidget *widget, gpointer data)
 {
@@ -184,8 +117,8 @@ int main_ui(int x, int y, char *filename)
     // Initilizes GTK
     gtk_init(NULL, NULL);
 
-    // Loads the UI description and builds the UI.
-    // (Exits if an error occurs.)
+    // Loads the UI description and builds the UI
+    // (Exits if an error occurs)
     GtkBuilder *builder = gtk_builder_new();
     GError* error = NULL;
     if (gtk_builder_add_from_file(builder, "picsel_glade.glade", &error) == 0)
@@ -195,22 +128,14 @@ int main_ui(int x, int y, char *filename)
         return 1;
     }
 
-    // Gets the widgets.
+    // Gets the widgets
+
     GtkWindow* window = GTK_WINDOW(gtk_builder_get_object(builder, "window"));
+    
     GtkDrawingArea* drawing_area = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "draw_area"));
     darea = drawing_area;
 
-    GtkColorChooser* color_select = GTK_COLOR_CHOOSER(gtk_builder_get_object(builder, "color"));
-
-
-    //GtkButton* prev_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "prev_frame"));
-    //GtkButton* next_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_frame"));
-    //GtkButton* new_frame_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_frame"));
-    //GtkButton* prev_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "prev_layer"));
-    //GtkButton* next_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "next_layer"));
-    //GtkButton* new_layer_button = GTK_BUTTON(gtk_builder_get_object(builder, "new_layer"));
-
-
+    GtkColorChooser *color_select = GTK_COLOR_CHOOSER(gtk_builder_get_object(builder, "color"));
 
     // button for slecting tools
 
@@ -222,35 +147,40 @@ int main_ui(int x, int y, char *filename)
     GtkButton* circle_button = GTK_BUTTON(gtk_builder_get_object(builder, "circle"));
     GtkButton* select_button = GTK_BUTTON(gtk_builder_get_object(builder, "select"));
 
+    // Menu bar buttons
+    
     GtkMenuItem* export_button_img = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-img"));
     GtkMenuItem* export_picsel_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "save-button"));
     GtkMenuItem* open_item = GTK_MENU_ITEM(gtk_builder_get_object(builder, "open-item"));
     GtkMenuItem* export_button_sprite = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-ss"));
     GtkMenuItem* export_button_gif = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-gif"));
-
-    main_sdl(x, y, filename);
+    GtkMenuItem* quit_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "quit_button"));
 
 
     // Connects signal handlers
-    //      Closing signal
-    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-    GtkMenuItem* quit_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "quit_button"));
-    g_signal_connect(quit_button, "activate", G_CALLBACK(gtk_main_quit), NULL);
+    // Closing signal
     
+    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    g_signal_connect(quit_button, "activate", G_CALLBACK(gtk_main_quit), NULL);
 
     // tools signal
 
-    g_signal_connect(pen_button, "clicked", G_CALLBACK(select_pen), color_select);
-    g_signal_connect(select_button, "clicked", G_CALLBACK(select_select), color_select);
-    g_signal_connect(eraser_button, "clicked", G_CALLBACK(select_eraser), color_select);
-    g_signal_connect(fill_button, "clicked", G_CALLBACK(select_fill), color_select);
-    g_signal_connect(line_button, "clicked", G_CALLBACK(select_line), color_select);
-    g_signal_connect(rectangle_button, "clicked", G_CALLBACK(select_rectangle), color_select);
-    g_signal_connect(circle_button, "clicked", G_CALLBACK(select_circle), color_select);
+    g_signal_connect(pen_button, "clicked", G_CALLBACK(select_tool), (void *) DRAW);
+    g_signal_connect(select_button, "clicked", G_CALLBACK(select_tool), (void *) SELECT);
+    g_signal_connect(eraser_button, "clicked", G_CALLBACK(select_tool), (void *) ERASER);
+    g_signal_connect(fill_button, "clicked", G_CALLBACK(select_tool), (void *) FILL);
+    g_signal_connect(line_button, "clicked", G_CALLBACK(select_tool), (void *) LINE);
+    g_signal_connect(rectangle_button, "clicked", G_CALLBACK(select_tool), (void *) RECTANGLE);
+    g_signal_connect(circle_button, "clicked", G_CALLBACK(select_tool), (void *) CIRCLE);
 
-    //      Drawing signals
+    // Drawing signals
+    
     setup_drawing(drawing_area, color_select, window);
 
+    // Image and struct setups
+
+    main_sdl(x, y, filename);
+    
     w = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
     h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
 
