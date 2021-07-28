@@ -14,6 +14,8 @@ typedef enum Tools
     SELECT,
 } Tools;
 
+gdouble x1,y1;
+
 void set_tool(Tools selected_tool);
 
 void deselect();
