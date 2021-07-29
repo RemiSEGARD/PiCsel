@@ -16,6 +16,8 @@ typedef enum Tools
 
 gdouble x1,y1;
 
+cairo_surface_t *surface;
+
 void set_tool(Tools selected_tool);
 
 void deselect();

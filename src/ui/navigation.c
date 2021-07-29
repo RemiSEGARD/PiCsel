@@ -4,7 +4,7 @@
 #include "../sdl/img_frame.h"
 #include "../sdl/img_layer.h"
 #include "ui.h"
-#include "drawing.h"
+#include "inputs.h"
 #include <unistd.h>
 
 GtkWidget *curframe_button;

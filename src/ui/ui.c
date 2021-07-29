@@ -1,7 +1,8 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include "ui.h"
-#include "drawing.h"
+#include "inputs.h"
+#include "drawingarea.h"
 #include "../sdl/sdl_treatment.h"
 #include <string.h>
 #include "../sdl/img_frame.h"

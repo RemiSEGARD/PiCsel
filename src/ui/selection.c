@@ -1,7 +1,7 @@
 #include "SDL.h"
 #include "selection.h"
 #include "../sdl/sdl_treatment.h"
-#include "drawing.h"
+#include "inputs.h"
 
 // Selection
 
