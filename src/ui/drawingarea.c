@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include "inputs.h"
+
 #include "../sdl/sdl_treatment.h"
 
 void draw_background()
@@ -15,6 +16,23 @@ void draw_background()
 
 }
 
+int win_x;
+int win_y;
+
+void on_drawingarea_draw(GtkWidget *widget, gpointer data)
+{
+    (void) data;
+    int new_x = gtk_widget_get_allocated_width(widget);
+    int new_y = gtk_widget_get_allocated_height(widget);
+    if (win_x != new_x || win_y != new_y)
+    {
+        win_x = new_x;
+        win_y = new_y;
+        SDL_Surface *surface = compress_frame(-1, 1);
+        redraw_surface((GtkDrawingArea *)widget, surface);
+    }
+}
+
 /* Create a new surface of the appropriate size to store our scribbles */
 gboolean configure_event_cb (GtkWidget *widget, 
         GdkEventConfigure *event, gpointer data)
@@ -25,9 +43,9 @@ gboolean configure_event_cb (GtkWidget *widget,
         cairo_surface_destroy (surface);
 
     surface = gdk_window_create_similar_surface (gtk_widget_get_window (widget),
-            CAIRO_CONTENT_COLOR,
-            gtk_widget_get_allocated_width (widget),
-            gtk_widget_get_allocated_height (widget));
+            CAIRO_CONTENT_COLOR, 
+            gtk_widget_get_allocated_width(widget), 
+            gtk_widget_get_allocated_height(widget));
     
     /* Initialize the surface to white */
     draw_background();
@@ -57,13 +75,12 @@ void draw_brush (GtkWidget *widget, gdouble x, gdouble y, GdkRGBA* color)
     
     /* Paint to the surface, where we store our state */
     cr = cairo_create (surface);
-    GdkRectangle rect = calculate_coord(x, y, 
-            gtk_widget_get_allocated_width(widget),
-            gtk_widget_get_allocated_height(widget), color);
+    GdkRectangle rect = calculate_coord(x, y, win_x,
+            win_y, color);
     
     cairo_set_source_rgba(cr, color->red, color->green, color->blue, color->alpha);
     
-    //fill(x,y,gtk_widget_get_allocated_width(widget),gtk_widget_get_allocated_height(widget),color);
+    //fill(x,y,win_x,win_y,color);
     
     cairo_rectangle (cr, rect.x, rect.y, rect.width, rect.height);
     cairo_fill (cr);
@@ -88,8 +105,8 @@ void draw_pixel (GtkWidget *widget, int x, int y, SDL_Surface *s)
     cr = cairo_create (surface);
     
     GdkRectangle rect; 
-    int w = gtk_widget_get_allocated_width(widget);
-    int h = gtk_widget_get_allocated_height(widget);
+    int w = win_x;
+    int h = win_y;
     int pixel_size;
     if ((double)(s->w) / w > (double)(s->h) / h)
         pixel_size = w / s->w;
@@ -127,8 +144,8 @@ void redraw_surface(GtkDrawingArea *drawing_area, SDL_Surface *surf)
     cr = cairo_create (surface);
     
     GdkRectangle rect; 
-    int w = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
-    int h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
+    int w = win_x;
+    int h = win_y;
     int pixel_size;
     if ((double)(surf->w) / w > (double)(surf->h) / h)
         pixel_size = w / surf->w;

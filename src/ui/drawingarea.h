@@ -3,6 +3,11 @@
 
 void draw_background();
 
+int win_x;
+int win_y;
+
+void on_drawingarea_draw(GtkWidget *widget, gpointer data);
+
 gboolean configure_event_cb (GtkWidget *widget, 
         GdkEventConfigure *event, gpointer data);
 

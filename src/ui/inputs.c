@@ -151,16 +151,12 @@ static gboolean button_press_event_cb (GtkWidget *widget,
             case FILL:
                 x1 = event->x;
                 y1 = event->y;
-                fill(event->x, event->y,
-                        gtk_widget_get_allocated_width(widget),
-                        gtk_widget_get_allocated_height(widget), color);
+                fill(event->x, event->y, win_x, win_y, color);
                 SDL_Surface *s = compress_frame(-1, 1);
                 redraw_surface((GtkDrawingArea *)widget, s);
                 break;
             case SELECT:
-                selection_press(event->x, event->y,
-                        gtk_widget_get_allocated_width(widget),
-                        gtk_widget_get_allocated_height(widget), widget);
+                selection_press(event->x, event->y, win_x, win_y, widget);
                 break;
             default:
                 x1 = event->x;
@@ -171,7 +167,7 @@ static gboolean button_press_event_cb (GtkWidget *widget,
     }
     else if (event->button == GDK_BUTTON_SECONDARY)
     {
-        GdkRGBA *p = eyedropper(event->x,event->y,gtk_widget_get_allocated_width(widget),gtk_widget_get_allocated_height(widget));
+        GdkRGBA *p = eyedropper(event->x, event->y, win_x, win_y);
         if (p == NULL)
             return TRUE;
         gtk_color_chooser_set_rgba(data,p);
@@ -188,8 +184,8 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
     (void) data;
     if (surface == NULL)
         return FALSE;
-    int h = gtk_widget_get_allocated_height(widget);
-    int w = gtk_widget_get_allocated_width(widget);
+    int h = win_y;
+    int w = win_x;
 
     GdkRGBA* color = malloc(sizeof(GdkRGBA));
     gtk_color_chooser_get_rgba(data,color);
@@ -228,9 +224,7 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
                 redraw_surface((GtkDrawingArea *)widget, s);
                 break;
             case SELECT:
-                selection_motion(event->x, event->y,
-                        gtk_widget_get_allocated_width(widget),
-                        gtk_widget_get_allocated_height(widget), widget);
+                selection_motion(event->x, event->y, win_x, win_y, widget);
 
                 break;
             default:
@@ -245,8 +239,8 @@ static gboolean motion_notify_event_cb (GtkWidget *widget,
 static gboolean button_release_event_cb (GtkWidget *widget,
         GdkEventMotion *event, gpointer data)
 {
-    int h = gtk_widget_get_allocated_height(widget);
-    int w = gtk_widget_get_allocated_width(widget);
+    int h = win_y;
+    int w = win_x;
     GdkRGBA* color = malloc(sizeof(GdkRGBA));
     gtk_color_chooser_get_rgba(data,color);
 
@@ -270,9 +264,7 @@ static gboolean button_release_event_cb (GtkWidget *widget,
                 redraw_surface((GtkDrawingArea *)widget, s);
                 break;
             case SELECT:
-                selection_release(event->x, event->y,
-                        gtk_widget_get_allocated_width(widget),
-                        gtk_widget_get_allocated_height(widget), widget);
+                selection_release(event->x, event->y, win_x, win_y, widget);
                 break;
             default:
                 break;

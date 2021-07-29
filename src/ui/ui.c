@@ -26,39 +26,23 @@ void select_tool(GtkWidget *widget, gpointer data)
     redraw_surface(darea, surface);
 }
 
-int w;
-int h;
-
-void on_drawingarea_draw(GtkWidget *widget, gpointer data)
-{
-    (void) data;
-    int new_w = gtk_widget_get_allocated_width(widget);
-    int new_h = gtk_widget_get_allocated_height(widget);
-    if (w != new_w || h != new_h)
-    {
-        w = gtk_widget_get_allocated_width(widget);
-        h = gtk_widget_get_allocated_height(widget);
-        SDL_Surface *surface = compress_frame(-1, 1);
-        redraw_surface((GtkDrawingArea *)widget, surface);
-    }
-}
 
 char* open_dialog(gpointer window)
-//static void open_dialog(GtkWidget* button, gpointer window)
+    //static void open_dialog(GtkWidget* button, gpointer window)
 {
-	gchar* res = NULL;
-	GtkWidget *dialog;
+    gchar* res = NULL;
+    GtkWidget *dialog;
 
     //dialog = gtk_file_chooser_dialog_new("Choose a filename", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_OK, GTK_RESPONSE_OK, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, NULL);
-	
+
     dialog = gtk_file_chooser_dialog_new("Choose a filename", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_SAVE, "_OK" ,GTK_RESPONSE_OK, "_Cancel", GTK_RESPONSE_CANCEL, NULL);
     gtk_window_set_transient_for(window, (GtkWindow *)dialog);
-	gtk_widget_show(dialog);
-	gint resp = gtk_dialog_run(GTK_DIALOG(dialog));
-	if(resp != GTK_RESPONSE_NONE)
-		res = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-	gtk_widget_destroy(dialog);
-	return (char*)res;
+    gtk_widget_show(dialog);
+    gint resp = gtk_dialog_run(GTK_DIALOG(dialog));
+    if(resp != GTK_RESPONSE_NONE)
+        res = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    gtk_widget_destroy(dialog);
+    return (char*)res;
 }
 
 
@@ -66,14 +50,14 @@ void on_import(GtkWidget *widget, gpointer window)
 {
     (void)widget;
     draw_background();
-	char* filename = open_dialog(window);
+    char* filename = open_dialog(window);
     if(filename)
     {
         main_sdl(-1, -1, filename);
-		SDL_Surface *surface = compress_frame(-1, 1);
-		redraw_surface(darea, surface);
+        SDL_Surface *surface = compress_frame(-1, 1);
+        redraw_surface(darea, surface);
         add_grid_buttons();
-	}
+    }
 }
 
 
@@ -83,7 +67,7 @@ void on_export_sprite(GtkMenuItem *item, gpointer window, gpointer data)
     (void) data;
     char* expname = open_dialog(window);
     if(expname)
-    	export_sprite(expname);
+        export_sprite(expname);
 }
 
 void on_export_gif(GtkMenuItem *item, gpointer window, gpointer data)
@@ -92,7 +76,7 @@ void on_export_gif(GtkMenuItem *item, gpointer window, gpointer data)
     (void) data;
     char* expname = open_dialog(window);
     if(expname)
-    	export_current_gif(expname);
+        export_current_gif(expname);
 }
 void on_export_picsel(GtkMenuItem *item, gpointer window, gpointer data)
 {
@@ -100,7 +84,7 @@ void on_export_picsel(GtkMenuItem *item, gpointer window, gpointer data)
     (void) data;
     char* expname = open_dialog(window);
     if(expname)
-    	export_current_frame(expname);
+        export_current_frame(expname);
 }
 
 void on_export(GtkMenuItem *item, gpointer window, gpointer data)
@@ -109,7 +93,7 @@ void on_export(GtkMenuItem *item, gpointer window, gpointer data)
     (void) data;
     char* expname = open_dialog(window);
     if(expname)
-    	export_current_frame(expname);
+        export_current_frame(expname);
 }
 
 
@@ -132,7 +116,7 @@ int main_ui(int x, int y, char *filename)
     // Gets the widgets
 
     GtkWindow* window = GTK_WINDOW(gtk_builder_get_object(builder, "window"));
-    
+
     GtkDrawingArea* drawing_area = GTK_DRAWING_AREA(gtk_builder_get_object(builder, "draw_area"));
     darea = drawing_area;
 
@@ -149,7 +133,7 @@ int main_ui(int x, int y, char *filename)
     GtkButton* select_button = GTK_BUTTON(gtk_builder_get_object(builder, "select"));
 
     // Menu bar buttons
-    
+
     GtkMenuItem* export_button_img = GTK_MENU_ITEM(gtk_builder_get_object(builder, "export-button-img"));
     GtkMenuItem* export_picsel_button = GTK_MENU_ITEM(gtk_builder_get_object(builder, "save-button"));
     GtkMenuItem* open_item = GTK_MENU_ITEM(gtk_builder_get_object(builder, "open-item"));
@@ -160,7 +144,7 @@ int main_ui(int x, int y, char *filename)
 
     // Connects signal handlers
     // Closing signal
-    
+
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
     g_signal_connect(quit_button, "activate", G_CALLBACK(gtk_main_quit), NULL);
 
@@ -175,15 +159,14 @@ int main_ui(int x, int y, char *filename)
     g_signal_connect(circle_button, "clicked", G_CALLBACK(select_tool), (void *) CIRCLE);
 
     // Drawing signals
-    
+
+    win_x = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
+    win_y = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
     setup_drawing(drawing_area, color_select, window);
 
     // Image and struct setups
 
     main_sdl(x, y, filename);
-    
-    w = gtk_widget_get_allocated_width((GtkWidget *)drawing_area);
-    h = gtk_widget_get_allocated_height((GtkWidget *)drawing_area);
 
     g_signal_connect(drawing_area, "draw", G_CALLBACK(on_drawingarea_draw), NULL);
 
@@ -196,7 +179,7 @@ int main_ui(int x, int y, char *filename)
 
 
     setup_nav(builder);
-    
+
     // Runs the main loop
     gtk_main();
 
